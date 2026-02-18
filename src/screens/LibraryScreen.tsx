@@ -12,15 +12,23 @@ export function LibraryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [courses, setCourses] = useState<LibraryCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadLibrary = useCallback(async () => {
-    setIsLoading(true);
+  const loadLibrary = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
 
     try {
-      const response = await apiClient.request<LibraryResponse>('/api/v1/mobile/library');
+      const response = await apiClient.requestWithCache<LibraryResponse>('/api/v1/mobile/library', {
+        forceRefresh,
+      });
       setCourses(response.courses);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [apiClient]);
 
@@ -44,6 +52,8 @@ export function LibraryScreen() {
         data={courses}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
+        refreshing={isRefreshing}
+        onRefresh={() => loadLibrary(true)}
         renderItem={({ item }) => (
           <Pressable
             style={styles.card}

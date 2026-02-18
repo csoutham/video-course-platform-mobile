@@ -1,7 +1,7 @@
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
 
@@ -17,19 +17,26 @@ export function PlayerScreen() {
 
   const [playback, setPlayback] = useState<PlaybackResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
 
-  const loadPlayback = useCallback(async () => {
-    setIsLoading(true);
+  const loadPlayback = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
 
     try {
-      const response = await apiClient.request<PlaybackResponse>(
+      const response = await apiClient.requestWithCache<PlaybackResponse>(
         `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`,
+        { forceRefresh, ttlMs: 60 * 1000 },
       );
       latestPlaybackRef.current = response;
       setPlayback(response);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [apiClient, route.params.courseSlug, route.params.lessonSlug]);
 
@@ -98,8 +105,15 @@ export function PlayerScreen() {
     await Linking.openURL(response.resource.url);
   };
 
+  const hasSummary = Boolean(playback?.lesson.summary?.trim());
+  const hasResources = Boolean(playback?.lesson.resources.length);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadPlayback(true)} />}
+    >
       <Text style={styles.title}>{route.params.title}</Text>
 
       {isLoading ? <Text style={styles.meta}>Loading lesson...</Text> : null}
@@ -119,26 +133,26 @@ export function PlayerScreen() {
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>Summary</Text>
-      {playback?.lesson.summary ? (
-        <View style={styles.summaryWrap}>
-          <Text style={styles.summaryText}>{playback.lesson.summary}</Text>
-        </View>
-      ) : (
-        <Text style={styles.meta}>No summary for this lesson.</Text>
-      )}
+      {hasSummary ? (
+        <>
+          <Text style={styles.sectionTitle}>Summary</Text>
+          <View style={styles.summaryWrap}>
+            <Text style={styles.summaryText}>{playback?.lesson.summary}</Text>
+          </View>
+        </>
+      ) : null}
 
-      <Text style={styles.sectionTitle}>Resources</Text>
-      {playback?.lesson.resources.length ? (
-        playback.lesson.resources.map((resource) => (
-          <Pressable key={resource.id} style={styles.resource} onPress={() => openResource(resource.id)}>
-            <Text style={styles.resourceTitle}>{resource.name}</Text>
-            <Text style={styles.meta}>{resource.mime_type || 'file'}</Text>
-          </Pressable>
-        ))
-      ) : (
-        <Text style={styles.meta}>No resources for this lesson.</Text>
-      )}
+      {hasResources ? (
+        <>
+          <Text style={styles.sectionTitle}>Resources</Text>
+          {playback?.lesson.resources.map((resource) => (
+            <Pressable key={resource.id} style={styles.resource} onPress={() => openResource(resource.id)}>
+              <Text style={styles.resourceTitle}>{resource.name}</Text>
+              <Text style={styles.meta}>{resource.mime_type || 'file'}</Text>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
     </ScrollView>
   );
 }

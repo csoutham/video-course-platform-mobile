@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -15,15 +15,24 @@ export function CourseScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [course, setCourse] = useState<CourseDetailResponse['course'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadCourse = useCallback(async () => {
-    setIsLoading(true);
+  const loadCourse = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
 
     try {
-      const response = await apiClient.request<CourseDetailResponse>(`/api/v1/mobile/courses/${route.params.courseSlug}`);
+      const response = await apiClient.requestWithCache<CourseDetailResponse>(
+        `/api/v1/mobile/courses/${route.params.courseSlug}`,
+        { forceRefresh },
+      );
       setCourse(response.course);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [apiClient, route.params.courseSlug]);
 
@@ -41,7 +50,10 @@ export function CourseScreen() {
       <Text style={styles.header}>{course?.title || route.params.title}</Text>
       <Text style={styles.meta}>{isLoading ? 'Loading...' : `${moduleCount} modules · ${lessonCount} lessons`}</Text>
 
-      <ScrollView contentContainerStyle={styles.list}>
+      <ScrollView
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadCourse(true)} />}
+      >
         {course?.modules.map((module) => (
           <View key={module.id} style={styles.moduleBlock}>
             <Text style={styles.moduleTitle}>{module.title}</Text>
