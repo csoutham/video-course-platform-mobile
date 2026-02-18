@@ -109,10 +109,24 @@ export function PlayerScreen() {
           {isIframeStream && iframeStreamUrl ? (
             <WebView source={{ uri: iframeStreamUrl }} style={styles.video} />
           ) : (
-            <VideoView player={player} style={styles.video} allowsFullscreen allowsPictureInPicture />
+            <VideoView
+              player={player}
+              style={styles.video}
+              fullscreenOptions={{ enable: true }}
+              allowsPictureInPicture
+            />
           )}
         </View>
       ) : null}
+
+      <Text style={styles.sectionTitle}>Summary</Text>
+      {playback?.lesson.summary ? (
+        <View style={styles.summaryWrap}>
+          <Text style={styles.summaryText}>{playback.lesson.summary}</Text>
+        </View>
+      ) : (
+        <Text style={styles.meta}>No summary for this lesson.</Text>
+      )}
 
       <Text style={styles.sectionTitle}>Resources</Text>
       {playback?.lesson.resources.length ? (
@@ -172,5 +186,16 @@ const styles = StyleSheet.create({
   resourceTitle: {
     color: '#e2e8f0',
     fontWeight: '600',
+  },
+  summaryWrap: {
+    borderRadius: 10,
+    borderColor: '#334155',
+    borderWidth: 1,
+    padding: 12,
+    backgroundColor: '#0f172a',
+  },
+  summaryText: {
+    color: '#e2e8f0',
+    lineHeight: 20,
   },
 });
