@@ -133,8 +133,7 @@ export function PlayerScreen() {
       return;
     }
 
-    navigation.replace('Player', {
-      courseSlug: route.params.courseSlug,
+    navigation.setParams({
       lessonSlug,
       title,
     });
@@ -316,7 +315,8 @@ const styles = StyleSheet.create({
   },
   video: {
     width: '100%',
-    height: 220,
+    aspectRatio: 16 / 9,
+    minHeight: 240,
     backgroundColor: '#000',
   },
   sectionTitle: {
