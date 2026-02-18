@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -33,33 +33,38 @@ export function CourseScreen() {
     }, [loadCourse]),
   );
 
-  const lessons = course?.modules.flatMap((module) => module.lessons) || [];
+  const moduleCount = course?.modules.length ?? 0;
+  const lessonCount = course?.modules.reduce((count, module) => count + module.lessons.length, 0) ?? 0;
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>{course?.title || route.params.title}</Text>
-      <Text style={styles.meta}>{isLoading ? 'Loading...' : `${lessons.length} lessons`}</Text>
+      <Text style={styles.meta}>{isLoading ? 'Loading...' : `${moduleCount} modules · ${lessonCount} lessons`}</Text>
 
-      <FlatList
-        data={lessons}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.card}
-            onPress={() =>
-              navigation.navigate('Player', {
-                courseSlug: route.params.courseSlug,
-                lessonSlug: item.slug,
-                title: item.title,
-              })
-            }
-          >
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.meta}>Progress: {item.progress?.percent_complete ?? 0}%</Text>
-          </Pressable>
-        )}
-      />
+      <ScrollView contentContainerStyle={styles.list}>
+        {course?.modules.map((module) => (
+          <View key={module.id} style={styles.moduleBlock}>
+            <Text style={styles.moduleTitle}>{module.title}</Text>
+
+            {module.lessons.map((lesson) => (
+              <Pressable
+                key={lesson.id}
+                style={styles.card}
+                onPress={() =>
+                  navigation.navigate('Player', {
+                    courseSlug: route.params.courseSlug,
+                    lessonSlug: lesson.slug,
+                    title: lesson.title,
+                  })
+                }
+              >
+                <Text style={styles.title}>{lesson.title}</Text>
+                <Text style={styles.meta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+              </Pressable>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -83,6 +88,16 @@ const styles = StyleSheet.create({
   list: {
     gap: 10,
     paddingTop: 12,
+    paddingBottom: 20,
+  },
+  moduleBlock: {
+    gap: 8,
+  },
+  moduleTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 4,
   },
   card: {
     borderRadius: 10,
