@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -10,9 +10,12 @@ import type { LibraryCourse, LibraryResponse } from '../types/api';
 export function LibraryScreen() {
   const { apiClient } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { width, height } = useWindowDimensions();
   const [courses, setCourses] = useState<LibraryCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const isTabletLandscape = width >= 1024 && width > height;
+  const gridColumns = isTabletLandscape ? 2 : 1;
 
   const loadLibrary = useCallback(async (forceRefresh = false) => {
     if (forceRefresh) {
@@ -51,12 +54,15 @@ export function LibraryScreen() {
       <FlatList
         data={courses}
         keyExtractor={(item) => String(item.id)}
+        key={gridColumns}
         contentContainerStyle={styles.list}
+        numColumns={gridColumns}
+        columnWrapperStyle={gridColumns > 1 ? styles.columnWrap : undefined}
         refreshing={isRefreshing}
         onRefresh={() => loadLibrary(true)}
         renderItem={({ item }) => (
           <Pressable
-            style={styles.card}
+            style={[styles.card, gridColumns > 1 ? styles.cardGrid : undefined]}
             onPress={() =>
               navigation.navigate('Course', {
                 courseSlug: item.slug,
@@ -90,6 +96,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 24,
   },
+  columnWrap: {
+    gap: 10,
+  },
   card: {
     borderRadius: 10,
     borderColor: '#cbd5e1',
@@ -97,6 +106,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 14,
     gap: 6,
+  },
+  cardGrid: {
+    flex: 1,
   },
   title: {
     fontSize: 16,
