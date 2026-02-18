@@ -1,12 +1,13 @@
-# VideoCourses Mobile (Expo)
+# Video Courses Mobile (Expo)
 
-React Native + Expo mobile app for playback of purchased VideoCourses content.
+React Native + Expo mobile app for playback of purchased Video Courses content.
 
 Version: `0.1.0`
 
 ## Build Target Model
 
-This app is compiled per installation/project. Set `EXPO_PUBLIC_API_BASE_URL` to the target backend before building binaries.
+This app is compiled per installation/project. Set `EXPO_PUBLIC_API_BASE_URL` to the target backend before building
+binaries.
 
 ## Requirements
 
