@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useAuth } from '../context/AuthContext';
 import type { AppTabParamList, RootStackParamList } from './types';
@@ -16,7 +17,15 @@ const AppTabs = createBottomTabNavigator<AppTabParamList>();
 
 function TabsNavigator() {
   return (
-    <AppTabs.Navigator>
+    <AppTabs.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          const iconName = route.name === 'Library' ? 'library-outline' : 'person-circle-outline';
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
       <AppTabs.Screen name="Library" component={LibraryScreen} />
       <AppTabs.Screen name="Account" component={AccountScreen} />
     </AppTabs.Navigator>

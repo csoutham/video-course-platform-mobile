@@ -39,14 +39,22 @@ export function PlayerScreen() {
     }, [loadPlayback]),
   );
 
-  const player = useVideoPlayer(playback?.stream_url || null, (instance) => {
+  const preferredStreamUrl = playback?.stream?.preferred_url || playback?.stream_url || null;
+  const iframeStreamUrl = playback?.stream?.iframe_url || null;
+
+  const player = useVideoPlayer(preferredStreamUrl, (instance) => {
     instance.loop = false;
   });
 
   const isIframeStream = useMemo(() => {
-    const url = playback?.stream_url || '';
-    return url.includes('iframe.videodelivery.net') || url.includes('/iframe');
-  }, [playback?.stream_url]);
+    const preferredPlayer = playback?.stream?.player;
+
+    if (preferredPlayer === 'webview') {
+      return true;
+    }
+
+    return false;
+  }, [playback?.stream?.player]);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,10 +104,10 @@ export function PlayerScreen() {
 
       {isLoading ? <Text style={styles.meta}>Loading lesson...</Text> : null}
 
-      {!isLoading && playback?.stream_url ? (
+      {!isLoading && (preferredStreamUrl || iframeStreamUrl) ? (
         <View style={styles.videoWrap}>
-          {isIframeStream ? (
-            <WebView source={{ uri: playback.stream_url }} style={styles.video} />
+          {isIframeStream && iframeStreamUrl ? (
+            <WebView source={{ uri: iframeStreamUrl }} style={styles.video} />
           ) : (
             <VideoView player={player} style={styles.video} allowsFullscreen allowsPictureInPicture />
           )}

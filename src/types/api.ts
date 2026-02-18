@@ -87,6 +87,12 @@ export type CourseDetailResponse = {
 
 export type PlaybackResponse = {
   stream_url: string | null;
+  stream: {
+    iframe_url: string;
+    hls_url: string;
+    preferred_url: string;
+    player: 'native' | 'webview';
+  } | null;
   heartbeat_seconds: number;
   auto_complete_percent: number;
   lesson: {
