@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -110,6 +110,13 @@ export function LibraryScreen() {
             onPress={() => openCourse(item.slug, item.title)}
             disabled={openingCourseSlug === item.slug}
           >
+            {item.thumbnail_url ? (
+              <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} resizeMode="cover" />
+            ) : (
+              <View style={styles.thumbnailPlaceholder}>
+                <Text style={styles.thumbnailPlaceholderText}>No Thumbnail</Text>
+              </View>
+            )}
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.meta}>{item.description || 'No description'}</Text>
             <Text style={styles.progress}>Progress: {item.progress.percent_complete}%</Text>
@@ -150,6 +157,25 @@ const styles = StyleSheet.create({
   },
   cardGrid: {
     flex: 1,
+  },
+  thumbnail: {
+    width: '100%',
+    height: 160,
+    borderRadius: 8,
+    backgroundColor: '#e2e8f0',
+  },
+  thumbnailPlaceholder: {
+    width: '100%',
+    height: 160,
+    borderRadius: 8,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbnailPlaceholderText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '600',
   },
   title: {
     fontSize: 16,
