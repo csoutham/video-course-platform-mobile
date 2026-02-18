@@ -51,8 +51,29 @@ export function AppNavigator() {
         ) : (
           <>
             <RootStack.Screen name="AppTabs" component={TabsNavigator} options={{ headerShown: false }} />
-            <RootStack.Screen name="Course" component={CourseScreen} options={({ route }) => ({ title: route.params.title })} />
-            <RootStack.Screen name="Player" component={PlayerScreen} options={({ route }) => ({ title: route.params.title })} />
+            <RootStack.Screen
+              name="Course"
+              component={CourseScreen}
+              options={({ route }) => ({
+                title: route.params.title,
+                headerBackButtonDisplayMode: 'minimal',
+              })}
+            />
+            <RootStack.Screen
+              name="Player"
+              component={PlayerScreen}
+              options={({ route }) => ({
+                title: route.params.title,
+                headerBackButtonDisplayMode: 'minimal',
+                headerStyle: {
+                  backgroundColor: '#020617',
+                },
+                headerTintColor: '#f8fafc',
+                headerTitleStyle: {
+                  color: '#f8fafc',
+                },
+              })}
+            />
           </>
         )}
       </RootStack.Navigator>
