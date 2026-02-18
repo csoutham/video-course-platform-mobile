@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "VideoCourses Mobile",
+    "slug": "videocourses-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.videocourses.mobile"
+    },
+    "android": {
+      "package": "com.videocourses.mobile"
+    },
+    "extra": {
+      "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-video"
+    ]
+  }
+}
