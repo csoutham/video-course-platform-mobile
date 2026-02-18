@@ -160,13 +160,13 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     width: '100%',
-    height: 160,
+    aspectRatio: 16 / 9,
     borderRadius: 8,
     backgroundColor: '#e2e8f0',
   },
   thumbnailPlaceholder: {
     width: '100%',
-    height: 160,
+    aspectRatio: 16 / 9,
     borderRadius: 8,
     backgroundColor: '#e2e8f0',
     alignItems: 'center',
