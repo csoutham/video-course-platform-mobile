@@ -5,7 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
-import type { LibraryCourse, LibraryResponse } from '../types/api';
+import type { CourseDetailResponse, LibraryCourse, LibraryResponse } from '../types/api';
 
 export function LibraryScreen() {
   const { apiClient } = useAuth();
@@ -14,6 +14,7 @@ export function LibraryScreen() {
   const [courses, setCourses] = useState<LibraryCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [openingCourseSlug, setOpeningCourseSlug] = useState<string | null>(null);
   const isTabletLandscape = width >= 1024 && width > height;
   const gridColumns = isTabletLandscape ? 2 : 1;
 
@@ -41,6 +42,49 @@ export function LibraryScreen() {
     }, [loadLibrary]),
   );
 
+  const openCourse = useCallback(
+    async (courseSlug: string, courseTitle: string) => {
+      if (!isTabletLandscape) {
+        navigation.navigate('Course', {
+          courseSlug,
+          title: courseTitle,
+        });
+        return;
+      }
+
+      setOpeningCourseSlug(courseSlug);
+
+      try {
+        const detail = await apiClient.requestWithCache<CourseDetailResponse>(`/api/v1/mobile/courses/${courseSlug}`);
+        const lessons = detail.course.modules.flatMap((module) => module.lessons);
+        const nextIncomplete = lessons.find((lesson) => lesson.progress?.status !== 'completed');
+        const targetLesson = nextIncomplete ?? lessons[0];
+
+        if (!targetLesson) {
+          navigation.navigate('Course', {
+            courseSlug,
+            title: courseTitle,
+          });
+          return;
+        }
+
+        navigation.navigate('Player', {
+          courseSlug,
+          lessonSlug: targetLesson.slug,
+          title: targetLesson.title,
+        });
+      } catch {
+        navigation.navigate('Course', {
+          courseSlug,
+          title: courseTitle,
+        });
+      } finally {
+        setOpeningCourseSlug(null);
+      }
+    },
+    [apiClient, isTabletLandscape, navigation],
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Courses</Text>
@@ -63,16 +107,13 @@ export function LibraryScreen() {
         renderItem={({ item }) => (
           <Pressable
             style={[styles.card, gridColumns > 1 ? styles.cardGrid : undefined]}
-            onPress={() =>
-              navigation.navigate('Course', {
-                courseSlug: item.slug,
-                title: item.title,
-              })
-            }
+            onPress={() => openCourse(item.slug, item.title)}
+            disabled={openingCourseSlug === item.slug}
           >
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.meta}>{item.description || 'No description'}</Text>
             <Text style={styles.progress}>Progress: {item.progress.percent_complete}%</Text>
+            {openingCourseSlug === item.slug ? <Text style={styles.meta}>Opening...</Text> : null}
           </Pressable>
         )}
       />
