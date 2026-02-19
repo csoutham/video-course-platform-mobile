@@ -7,6 +7,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
 
 import { useAuth } from '../context/AuthContext';
+import { formatProgressLabel } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
 import type { CourseDetailResponse, PlaybackResponse, ResourceResponse } from '../types/api';
 
@@ -119,7 +120,8 @@ export function PlayerScreen() {
     currentLessonIndex >= 0 && currentLessonIndex < flattenedLessons.length - 1
       ? flattenedLessons[currentLessonIndex + 1]
       : null;
-  const isLessonCompleted = playback?.progress.status === 'completed';
+  const isLessonCompleted =
+    playback?.progress.status === 'completed' || (playback?.progress.percent_complete ?? 0) >= 99;
 
   const applyProgressUpdate = useCallback(
     async (response: { status: string; percent_complete: number; playback_position_seconds: number; updated_at: string | null }) => {
@@ -378,7 +380,9 @@ export function PlayerScreen() {
                             <Text style={[styles.lessonItemTitle, isActive ? styles.lessonItemTitleActive : undefined]}>
                               {lesson.title}
                             </Text>
-                            <Text style={styles.lessonItemMeta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+                            <Text style={styles.lessonItemMeta}>
+                              Progress: {formatProgressLabel(lesson.progress?.percent_complete)}
+                            </Text>
                           </View>
                           <Ionicons name="chevron-forward" size={16} color={isActive ? '#bfdbfe' : '#94a3b8'} />
                         </View>

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
+import { formatProgressLabel } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
 import type { CourseDetailResponse, LibraryCourse, LibraryResponse } from '../types/api';
 
@@ -120,7 +121,7 @@ export function LibraryScreen() {
                 </View>
               )}
               <View style={styles.progressBadge}>
-                <Text style={styles.progressBadgeText}>{item.progress.percent_complete}%</Text>
+                <Text style={styles.progressBadgeText}>{formatProgressLabel(item.progress.percent_complete)}</Text>
               </View>
             </View>
             <View style={styles.cardBody}>
