@@ -127,7 +127,6 @@ export function LibraryScreen() {
             <View style={styles.cardBody}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.meta}>{item.description || 'No description'}</Text>
-              <Text style={styles.progress}>Progress</Text>
               {openingCourseSlug === item.slug ? <Text style={styles.meta}>Opening...</Text> : null}
             </View>
           </Pressable>

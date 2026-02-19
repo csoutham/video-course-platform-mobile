@@ -40,7 +40,7 @@ export function CourseScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadCourse();
+      loadCourse(true);
     }, [loadCourse]),
   );
 
