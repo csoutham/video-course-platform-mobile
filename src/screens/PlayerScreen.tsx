@@ -21,6 +21,7 @@ export function PlayerScreen() {
   const [courseDetail, setCourseDetail] = useState<CourseDetailResponse['course'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
 
   const isTabletLandscape = width >= 1024 && width > height;
@@ -143,6 +144,95 @@ export function PlayerScreen() {
   const hasResources = Boolean(playback?.lesson.resources.length);
 
   const lessonList = courseDetail?.modules ?? [];
+  const flattenedLessons = useMemo(() => lessonList.flatMap((module) => module.lessons), [lessonList]);
+  const currentLessonIndex = useMemo(
+    () => flattenedLessons.findIndex((lesson) => lesson.slug === route.params.lessonSlug),
+    [flattenedLessons, route.params.lessonSlug],
+  );
+  const previousLesson = currentLessonIndex > 0 ? flattenedLessons[currentLessonIndex - 1] : null;
+  const nextLesson =
+    currentLessonIndex >= 0 && currentLessonIndex < flattenedLessons.length - 1
+      ? flattenedLessons[currentLessonIndex + 1]
+      : null;
+  const isLessonCompleted = playback?.progress.status === 'completed';
+
+  const markLessonComplete = useCallback(async () => {
+    if (!playback || isLessonCompleted) {
+      return;
+    }
+
+    setIsCompleting(true);
+
+    try {
+      const position = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
+      const duration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
+
+      const response = await apiClient.request<{
+        status: string;
+        percent_complete: number;
+        playback_position_seconds: number;
+        updated_at: string | null;
+      }>(`/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`, {
+        method: 'POST',
+        body: JSON.stringify({
+          position_seconds: position,
+          duration_seconds: duration,
+          is_completed: true,
+        }),
+      });
+
+      setPlayback((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          progress: {
+            ...current.progress,
+            status: response.status,
+            percent_complete: response.percent_complete,
+            playback_position_seconds: response.playback_position_seconds,
+            updated_at: response.updated_at,
+            completed_at: response.status === 'completed' ? response.updated_at : current.progress.completed_at,
+          },
+        };
+      });
+
+      setCourseDetail((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          modules: current.modules.map((module) => ({
+            ...module,
+            lessons: module.lessons.map((lesson) => {
+              if (lesson.slug !== route.params.lessonSlug) {
+                return lesson;
+              }
+
+              return {
+                ...lesson,
+                progress: {
+                  status: response.status,
+                  percent_complete: response.percent_complete,
+                  playback_position_seconds: response.playback_position_seconds,
+                  video_duration_seconds: lesson.progress?.video_duration_seconds ?? lesson.duration_seconds,
+                  last_viewed_at: lesson.progress?.last_viewed_at ?? null,
+                  completed_at: response.status === 'completed' ? response.updated_at : null,
+                  updated_at: response.updated_at,
+                },
+              };
+            }),
+          })),
+        };
+      });
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [apiClient, isLessonCompleted, playback, player, route.params.courseSlug, route.params.lessonSlug]);
 
   const playerContent = (
     <>
@@ -155,6 +245,38 @@ export function PlayerScreen() {
           )}
         </View>
       ) : null}
+
+      <View style={styles.controlsRow}>
+        <Pressable
+          style={[styles.controlButton, !previousLesson ? styles.controlButtonDisabled : undefined]}
+          onPress={() => previousLesson && openLesson(previousLesson.slug, previousLesson.title)}
+          disabled={!previousLesson}
+        >
+          <Text style={styles.controlButtonText}>Previous</Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.controlButton,
+            styles.controlButtonPrimary,
+            isLessonCompleted || isCompleting ? styles.controlButtonDisabled : undefined,
+          ]}
+          onPress={markLessonComplete}
+          disabled={isLessonCompleted || isCompleting}
+        >
+          <Text style={styles.controlButtonPrimaryText}>
+            {isCompleting ? 'Saving...' : isLessonCompleted ? 'Completed' : 'Complete'}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.controlButton, !nextLesson ? styles.controlButtonDisabled : undefined]}
+          onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
+          disabled={!nextLesson}
+        >
+          <Text style={styles.controlButtonText}>Next</Text>
+        </Pressable>
+      </View>
 
       {hasSummary ? (
         <>
@@ -345,5 +467,35 @@ const styles = StyleSheet.create({
   summaryText: {
     color: '#e2e8f0',
     lineHeight: 20,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  controlButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0f172a',
+  },
+  controlButtonPrimary: {
+    borderColor: '#1d4ed8',
+    backgroundColor: '#1d4ed8',
+  },
+  controlButtonDisabled: {
+    opacity: 0.45,
+  },
+  controlButtonText: {
+    color: '#e2e8f0',
+    fontWeight: '600',
+  },
+  controlButtonPrimaryText: {
+    color: '#f8fafc',
+    fontWeight: '700',
   },
 });
