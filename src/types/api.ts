@@ -131,3 +131,17 @@ export type ResourceResponse = {
     url: string;
   };
 };
+
+export type Receipt = {
+  order_public_id: string;
+  status: 'paid' | 'refunded' | string;
+  total_amount: number;
+  currency: string;
+  paid_at: string | null;
+  refunded_at: string | null;
+  receipt_url: string;
+};
+
+export type ReceiptsResponse = {
+  receipts: Receipt[];
+};

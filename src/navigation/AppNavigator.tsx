@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,8 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AppTabs = createBottomTabNavigator<AppTabParamList>();
 
 function TabsNavigator() {
+  const { logout } = useAuth();
+
   return (
     <AppTabs.Navigator
       screenOptions={({ route }) => ({
@@ -27,7 +29,17 @@ function TabsNavigator() {
       })}
     >
       <AppTabs.Screen name="Library" component={LibraryScreen} />
-      <AppTabs.Screen name="Account" component={AccountScreen} />
+      <AppTabs.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{
+          headerRight: () => (
+            <Pressable onPress={() => logout()} hitSlop={8}>
+              <Text style={{ color: '#1d4ed8', fontWeight: '600' }}>Logout</Text>
+            </Pressable>
+          ),
+        }}
+      />
     </AppTabs.Navigator>
   );
 }
