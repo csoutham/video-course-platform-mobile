@@ -73,7 +73,7 @@ export function PlayerScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      refreshAll();
+      refreshAll(true);
     }, [refreshAll]),
   );
 

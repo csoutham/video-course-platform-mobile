@@ -2,7 +2,7 @@
   "expo": {
     "name": "Video Courses Mobile",
     "slug": "videocourses-mobile",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "orientation": "default",
     "userInterfaceStyle": "light",
     "splash": {
