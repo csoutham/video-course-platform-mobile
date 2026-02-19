@@ -292,7 +292,13 @@ export function PlayerScreen() {
           {isIframeStream && iframeStreamUrl ? (
             <WebView source={{ uri: iframeStreamUrl }} style={styles.video} />
           ) : (
-            <VideoView player={player} style={styles.video} fullscreenOptions={{ enable: true }} allowsPictureInPicture />
+            <VideoView
+              player={player}
+              style={styles.video}
+              contentFit="contain"
+              fullscreenOptions={{ enable: true }}
+              allowsPictureInPicture
+            />
           )}
         </View>
       ) : null}
@@ -429,7 +435,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#020617',
   },
   content: {
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     gap: 12,
   },
   splitLayout: {
@@ -504,6 +511,9 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
   },
   videoWrap: {
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'center',
     borderRadius: 12,
     overflow: 'hidden',
     borderColor: '#1e293b',
@@ -512,7 +522,6 @@ const styles = StyleSheet.create({
   video: {
     width: '100%',
     aspectRatio: 16 / 9,
-    minHeight: 240,
     backgroundColor: '#000',
   },
   sectionTitle: {
