@@ -7,7 +7,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
 
 import { useAuth } from '../context/AuthContext';
-import { formatProgressLabel } from '../lib/progress';
+import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
 import type { CourseDetailResponse, PlaybackResponse, ResourceResponse } from '../types/api';
 
@@ -381,7 +381,7 @@ export function PlayerScreen() {
                               {lesson.title}
                             </Text>
                             <Text style={styles.lessonItemMeta}>
-                              Progress: {formatProgressLabel(lesson.progress?.percent_complete)}
+                              {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
                             </Text>
                           </View>
                           <Ionicons name="chevron-forward" size={16} color={isActive ? '#bfdbfe' : '#94a3b8'} />

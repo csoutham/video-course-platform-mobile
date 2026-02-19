@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
-import { formatProgressLabel } from '../lib/progress';
+import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
 import type { CourseDetailResponse } from '../types/api';
 
@@ -75,7 +75,9 @@ export function CourseScreen() {
                 <View style={styles.row}>
                   <View style={styles.rowContent}>
                     <Text style={styles.title}>{lesson.title}</Text>
-                    <Text style={styles.meta}>Progress: {formatProgressLabel(lesson.progress?.percent_complete)}</Text>
+                    <Text style={styles.meta}>
+                      {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
+                    </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
                 </View>
