@@ -75,13 +75,21 @@ export function AppNavigator() {
           <RootStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <RootStack.Screen name="AppTabs" component={TabsNavigator} options={{ headerShown: false }} />
+            <RootStack.Screen
+              name="AppTabs"
+              component={TabsNavigator}
+              options={{
+                headerShown: false,
+                title: 'Courses',
+              }}
+            />
             <RootStack.Screen
               name="Course"
               component={CourseScreen}
               options={({ route }) => ({
                 title: route.params.title,
                 headerBackButtonDisplayMode: 'minimal',
+                headerBackTitle: 'Courses',
               })}
             />
             <RootStack.Screen
@@ -90,6 +98,7 @@ export function AppNavigator() {
               options={({ route }) => ({
                 title: route.params.title,
                 headerBackButtonDisplayMode: 'minimal',
+                headerBackTitle: 'Courses',
                 headerStyle: {
                   backgroundColor: '#020617',
                 },
