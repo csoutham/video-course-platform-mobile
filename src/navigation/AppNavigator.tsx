@@ -21,6 +21,12 @@ function TabsNavigator() {
   return (
     <AppTabs.Navigator
       screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#1d4ed8',
+        tabBarInactiveTintColor: '#64748b',
+        tabBarStyle: {
+          borderTopColor: '#e2e8f0',
+          backgroundColor: '#ffffff',
+        },
         tabBarIcon: ({ color, size }) => {
           const iconName = route.name === 'Library' ? 'library-outline' : 'person-circle-outline';
 
@@ -28,7 +34,14 @@ function TabsNavigator() {
         },
       })}
     >
-      <AppTabs.Screen name="Library" component={LibraryScreen} />
+      <AppTabs.Screen
+        name="Library"
+        component={LibraryScreen}
+        options={{
+          title: 'My Courses',
+          tabBarLabel: 'My Courses',
+        }}
+      />
       <AppTabs.Screen
         name="Account"
         component={AccountScreen}

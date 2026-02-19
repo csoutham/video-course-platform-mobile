@@ -1,4 +1,5 @@
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -259,22 +260,26 @@ export function PlayerScreen() {
           style={[
             styles.controlButton,
             styles.controlButtonPrimary,
+            !nextLesson ? styles.controlButtonDisabled : undefined,
+          ]}
+          onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
+          disabled={!nextLesson}
+        >
+          <Text style={styles.controlButtonPrimaryText}>Next</Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.controlButton,
+            styles.controlButtonComplete,
             isLessonCompleted || isCompleting ? styles.controlButtonDisabled : undefined,
           ]}
           onPress={markLessonComplete}
           disabled={isLessonCompleted || isCompleting}
         >
-          <Text style={styles.controlButtonPrimaryText}>
+          <Text style={styles.controlButtonText}>
             {isCompleting ? 'Saving...' : isLessonCompleted ? 'Completed' : 'Complete'}
           </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.controlButton, !nextLesson ? styles.controlButtonDisabled : undefined]}
-          onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
-          disabled={!nextLesson}
-        >
-          <Text style={styles.controlButtonText}>Next</Text>
         </Pressable>
       </View>
 
@@ -320,8 +325,15 @@ export function PlayerScreen() {
                         style={[styles.lessonItem, isActive ? styles.lessonItemActive : undefined]}
                         onPress={() => openLesson(lesson.slug, lesson.title)}
                       >
-                        <Text style={[styles.lessonItemTitle, isActive ? styles.lessonItemTitleActive : undefined]}>{lesson.title}</Text>
-                        <Text style={styles.lessonItemMeta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+                        <View style={styles.lessonItemRow}>
+                          <View style={styles.lessonItemBody}>
+                            <Text style={[styles.lessonItemTitle, isActive ? styles.lessonItemTitleActive : undefined]}>
+                              {lesson.title}
+                            </Text>
+                            <Text style={styles.lessonItemMeta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={16} color={isActive ? '#bfdbfe' : '#94a3b8'} />
+                        </View>
                       </Pressable>
                     );
                   })}
@@ -406,6 +418,16 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#0f172a',
   },
+  lessonItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  lessonItemBody: {
+    flex: 1,
+    gap: 4,
+  },
   lessonItemActive: {
     borderColor: '#60a5fa',
     backgroundColor: '#172554',
@@ -486,6 +508,10 @@ const styles = StyleSheet.create({
   controlButtonPrimary: {
     borderColor: '#1d4ed8',
     backgroundColor: '#1d4ed8',
+  },
+  controlButtonComplete: {
+    borderColor: '#334155',
+    backgroundColor: '#1e293b',
   },
   controlButtonDisabled: {
     opacity: 0.45,

@@ -1,4 +1,5 @@
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -70,8 +71,13 @@ export function CourseScreen() {
                   })
                 }
               >
-                <Text style={styles.title}>{lesson.title}</Text>
-                <Text style={styles.meta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+                <View style={styles.row}>
+                  <View style={styles.rowContent}>
+                    <Text style={styles.title}>{lesson.title}</Text>
+                    <Text style={styles.meta}>Progress: {lesson.progress?.percent_complete ?? 0}%</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+                </View>
               </Pressable>
             ))}
           </View>
@@ -117,6 +123,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: '#fff',
     padding: 14,
+    gap: 5,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  rowContent: {
+    flex: 1,
     gap: 5,
   },
   title: {

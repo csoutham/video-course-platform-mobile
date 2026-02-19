@@ -88,6 +88,7 @@ export function LibraryScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Courses</Text>
+      <Text style={styles.subHeader}>Continue where you left off.</Text>
 
       {isLoading ? <Text style={styles.meta}>Loading...</Text> : null}
 
@@ -110,17 +111,24 @@ export function LibraryScreen() {
             onPress={() => openCourse(item.slug, item.title)}
             disabled={openingCourseSlug === item.slug}
           >
-            {item.thumbnail_url ? (
-              <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} resizeMode="cover" />
-            ) : (
-              <View style={styles.thumbnailPlaceholder}>
-                <Text style={styles.thumbnailPlaceholderText}>No Thumbnail</Text>
+            <View style={styles.thumbnailWrap}>
+              {item.thumbnail_url ? (
+                <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} resizeMode="cover" />
+              ) : (
+                <View style={styles.thumbnailPlaceholder}>
+                  <Text style={styles.thumbnailPlaceholderText}>No Thumbnail</Text>
+                </View>
+              )}
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>{item.progress.percent_complete}%</Text>
               </View>
-            )}
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.meta}>{item.description || 'No description'}</Text>
-            <Text style={styles.progress}>Progress: {item.progress.percent_complete}%</Text>
-            {openingCourseSlug === item.slug ? <Text style={styles.meta}>Opening...</Text> : null}
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.meta}>{item.description || 'No description'}</Text>
+              <Text style={styles.progress}>Progress</Text>
+              {openingCourseSlug === item.slug ? <Text style={styles.meta}>Opening...</Text> : null}
+            </View>
           </Pressable>
         )}
       />
@@ -137,8 +145,13 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 4,
     color: '#0f172a',
+  },
+  subHeader: {
+    fontSize: 13,
+    color: '#64748b',
+    marginBottom: 12,
   },
   list: {
     gap: 10,
@@ -148,29 +161,48 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   card: {
-    borderRadius: 10,
+    borderRadius: 12,
     borderColor: '#cbd5e1',
     borderWidth: 1,
     backgroundColor: '#fff',
-    padding: 14,
-    gap: 6,
+    overflow: 'hidden',
   },
   cardGrid: {
     flex: 1,
   },
+  thumbnailWrap: {
+    position: 'relative',
+  },
   thumbnail: {
     width: '100%',
     aspectRatio: 16 / 9,
-    borderRadius: 8,
     backgroundColor: '#e2e8f0',
   },
   thumbnailPlaceholder: {
     width: '100%',
     aspectRatio: 16 / 9,
-    borderRadius: 8,
     backgroundColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  progressBadge: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    backgroundColor: 'rgba(2, 6, 23, 0.8)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  progressBadgeText: {
+    color: '#f8fafc',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  cardBody: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 5,
   },
   thumbnailPlaceholderText: {
     color: '#64748b',
@@ -178,8 +210,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#0f172a',
   },
   meta: {
@@ -187,8 +219,10 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   progress: {
-    fontSize: 13,
-    color: '#1d4ed8',
-    fontWeight: '600',
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
