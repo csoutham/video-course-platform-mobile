@@ -24,31 +24,32 @@ export function PlayerScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
+  const playbackPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`;
+  const progressPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`;
+  const courseDetailPath = `/api/v1/mobile/courses/${route.params.courseSlug}`;
+  const libraryPath = '/api/v1/mobile/library';
 
   const isTabletLandscape = width >= 1024 && width > height;
 
   const loadPlayback = useCallback(
     async (forceRefresh = false) => {
-      const response = await apiClient.requestWithCache<PlaybackResponse>(
-        `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`,
-        { forceRefresh, ttlMs: 60 * 1000 },
-      );
+      const response = await apiClient.requestWithCache<PlaybackResponse>(playbackPath, { forceRefresh, ttlMs: 60 * 1000 });
 
       latestPlaybackRef.current = response;
       setPlayback(response);
     },
-    [apiClient, route.params.courseSlug, route.params.lessonSlug],
+    [apiClient, playbackPath],
   );
 
   const loadCourseDetail = useCallback(
     async (forceRefresh = false) => {
-      const response = await apiClient.requestWithCache<CourseDetailResponse>(`/api/v1/mobile/courses/${route.params.courseSlug}`, {
+      const response = await apiClient.requestWithCache<CourseDetailResponse>(courseDetailPath, {
         forceRefresh,
       });
 
       setCourseDetail(response.course);
     },
-    [apiClient, route.params.courseSlug],
+    [apiClient, courseDetailPath],
   );
 
   const refreshAll = useCallback(
@@ -88,43 +89,6 @@ export function PlayerScreen() {
     return preferredPlayer === 'webview';
   }, [playback?.stream?.player]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!latestPlaybackRef.current) {
-        return;
-      }
-
-      const heartbeatSeconds = latestPlaybackRef.current.heartbeat_seconds;
-
-      const interval = setInterval(async () => {
-        const current = latestPlaybackRef.current;
-        if (!current) {
-          return;
-        }
-
-        const position = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
-        const duration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
-
-        try {
-          await apiClient.request(
-            `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`,
-            {
-              method: 'POST',
-              body: JSON.stringify({
-                position_seconds: position,
-                duration_seconds: duration,
-              }),
-            },
-          );
-        } catch {
-          // no-op for heartbeat failures
-        }
-      }, heartbeatSeconds * 1000);
-
-      return () => clearInterval(interval);
-    }, [apiClient, player, route.params.courseSlug, route.params.lessonSlug]),
-  );
-
   const openResource = async (resourceId: number): Promise<void> => {
     const response = await apiClient.request<ResourceResponse>(`/api/v1/mobile/resources/${resourceId}`);
     await Linking.openURL(response.resource.url);
@@ -157,37 +121,17 @@ export function PlayerScreen() {
       : null;
   const isLessonCompleted = playback?.progress.status === 'completed';
 
-  const markLessonComplete = useCallback(async () => {
-    if (!playback || isLessonCompleted) {
-      return;
-    }
-
-    setIsCompleting(true);
-
-    try {
-      const position = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
-      const duration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
-
-      const response = await apiClient.request<{
-        status: string;
-        percent_complete: number;
-        playback_position_seconds: number;
-        updated_at: string | null;
-      }>(`/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`, {
-        method: 'POST',
-        body: JSON.stringify({
-          position_seconds: position,
-          duration_seconds: duration,
-          is_completed: true,
-        }),
-      });
+  const applyProgressUpdate = useCallback(
+    async (response: { status: string; percent_complete: number; playback_position_seconds: number; updated_at: string | null }) => {
+      let nextPlayback: PlaybackResponse | null = null;
+      let nextCourse: CourseDetailResponse['course'] | null = null;
 
       setPlayback((current) => {
         if (!current) {
           return current;
         }
 
-        return {
+        nextPlayback = {
           ...current,
           progress: {
             ...current.progress,
@@ -198,6 +142,8 @@ export function PlayerScreen() {
             completed_at: response.status === 'completed' ? response.updated_at : current.progress.completed_at,
           },
         };
+
+        return nextPlayback;
       });
 
       setCourseDetail((current) => {
@@ -205,7 +151,7 @@ export function PlayerScreen() {
           return current;
         }
 
-        return {
+        nextCourse = {
           ...current,
           modules: current.modules.map((module) => ({
             ...module,
@@ -229,11 +175,113 @@ export function PlayerScreen() {
             }),
           })),
         };
+
+        return nextCourse;
       });
+
+      if (nextPlayback) {
+        latestPlaybackRef.current = nextPlayback;
+        await apiClient.setCachedResponse(playbackPath, nextPlayback);
+      }
+
+      if (nextCourse) {
+        await apiClient.setCachedResponse(courseDetailPath, { course: nextCourse });
+      }
+
+      await apiClient.invalidateCachedResponse(libraryPath);
+    },
+    [apiClient, courseDetailPath, libraryPath, playbackPath, route.params.lessonSlug],
+  );
+
+  const submitProgress = useCallback(
+    async (isCompleted = false) => {
+      const position = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
+      const duration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
+
+      return apiClient.request<{
+        status: string;
+        percent_complete: number;
+        playback_position_seconds: number;
+        updated_at: string | null;
+      }>(progressPath, {
+        method: 'POST',
+        body: JSON.stringify({
+          position_seconds: position,
+          duration_seconds: duration,
+          is_completed: isCompleted,
+        }),
+      });
+    },
+    [apiClient, player, progressPath],
+  );
+
+  const markLessonComplete = useCallback(async () => {
+    if (!playback || isLessonCompleted) {
+      return;
+    }
+
+    setIsCompleting(true);
+
+    try {
+      const response = await submitProgress(true);
+      await applyProgressUpdate(response);
     } finally {
       setIsCompleting(false);
     }
-  }, [apiClient, isLessonCompleted, playback, player, route.params.courseSlug, route.params.lessonSlug]);
+  }, [applyProgressUpdate, isLessonCompleted, playback, submitProgress]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!latestPlaybackRef.current) {
+        return;
+      }
+
+      const heartbeatSeconds = latestPlaybackRef.current.heartbeat_seconds;
+
+      const interval = setInterval(async () => {
+        const current = latestPlaybackRef.current;
+        if (!current) {
+          return;
+        }
+
+        try {
+          const response = await submitProgress();
+
+          if (
+            response.status !== current.progress.status ||
+            response.percent_complete !== current.progress.percent_complete ||
+            response.playback_position_seconds !== current.progress.playback_position_seconds
+          ) {
+            await applyProgressUpdate(response);
+          }
+        } catch {
+          // no-op for heartbeat failures
+        }
+      }, heartbeatSeconds * 1000);
+
+      return () => clearInterval(interval);
+    }, [applyProgressUpdate, submitProgress]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = player.addListener('playToEnd', () => {
+        if (latestPlaybackRef.current?.progress.status === 'completed') {
+          return;
+        }
+
+        void submitProgress(true)
+          .then((response) => applyProgressUpdate(response))
+          .catch(() => {
+            // no-op for completion failures
+          });
+      });
+
+      return () => {
+        subscription.remove();
+      };
+    }, [applyProgressUpdate, player, submitProgress]),
+  );
 
   const playerContent = (
     <>

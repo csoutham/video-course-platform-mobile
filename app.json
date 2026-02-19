@@ -2,7 +2,7 @@
   "expo": {
     "name": "Video Courses Mobile",
     "slug": "videocourses-mobile",
-    "version": "0.1.0",
+    "version": "0.1.4",
     "orientation": "default",
     "userInterfaceStyle": "light",
     "splash": {
@@ -19,9 +19,6 @@
     "extra": {
       "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}"
     },
-    "plugins": [
-      "expo-secure-store",
-      "expo-video"
-    ]
+    "plugins": ["expo-secure-store", "expo-video"]
   }
 }

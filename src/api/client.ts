@@ -76,6 +76,16 @@ export class ApiClient {
     }
   }
 
+  async setCachedResponse<T>(path: string, data: T): Promise<void> {
+    const key = this.cacheKey(path);
+    await this.writeCache(key, data);
+  }
+
+  async invalidateCachedResponse(path: string): Promise<void> {
+    const key = this.cacheKey(path);
+    await AsyncStorage.removeItem(key);
+  }
+
   private cacheKey(path: string): string {
     return `${CACHE_PREFIX}${path}`;
   }
