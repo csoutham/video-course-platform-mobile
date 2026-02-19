@@ -259,18 +259,6 @@ export function PlayerScreen() {
         <Pressable
           style={[
             styles.controlButton,
-            styles.controlButtonPrimary,
-            !nextLesson ? styles.controlButtonDisabled : undefined,
-          ]}
-          onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
-          disabled={!nextLesson}
-        >
-          <Text style={styles.controlButtonPrimaryText}>Next</Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.controlButton,
             styles.controlButtonComplete,
             isLessonCompleted || isCompleting ? styles.controlButtonDisabled : undefined,
           ]}
@@ -280,6 +268,18 @@ export function PlayerScreen() {
           <Text style={styles.controlButtonText}>
             {isCompleting ? 'Saving...' : isLessonCompleted ? 'Completed' : 'Complete'}
           </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.controlButton,
+            styles.controlButtonPrimary,
+            !nextLesson ? styles.controlButtonDisabled : undefined,
+          ]}
+          onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
+          disabled={!nextLesson}
+        >
+          <Text style={styles.controlButtonPrimaryText}>Next</Text>
         </Pressable>
       </View>
 
@@ -506,8 +506,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f172a',
   },
   controlButtonPrimary: {
-    borderColor: '#1d4ed8',
-    backgroundColor: '#1d4ed8',
+    borderColor: '#1e3a8a',
+    backgroundColor: '#1e3a8a',
   },
   controlButtonComplete: {
     borderColor: '#334155',

@@ -2,7 +2,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { buildApiUrl } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import type { Receipt, ReceiptsResponse } from '../types/api';
 
@@ -68,15 +67,6 @@ export function AccountScreen() {
       <Text style={styles.title}>{user?.name}</Text>
       <Text style={styles.meta}>{user?.email}</Text>
 
-      <Pressable
-        style={styles.catalogButton}
-        onPress={() => {
-          Linking.openURL(buildApiUrl('/courses'));
-        }}
-      >
-        <Text style={styles.catalogButtonText}>Find more Courses</Text>
-      </Pressable>
-
       <Text style={styles.sectionTitle}>Receipts</Text>
 
       {isLoading ? <Text style={styles.meta}>Loading receipts...</Text> : null}
@@ -131,19 +121,6 @@ const styles = StyleSheet.create({
   },
   meta: {
     color: '#475569',
-  },
-  catalogButton: {
-    marginTop: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1d4ed8',
-    backgroundColor: '#eff6ff',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  catalogButtonText: {
-    fontWeight: '600',
-    color: '#1d4ed8',
   },
   list: {
     gap: 10,
