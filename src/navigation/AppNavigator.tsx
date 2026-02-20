@@ -49,7 +49,7 @@ function TabsNavigator() {
         options={{
           headerRight: () => (
             <Pressable onPress={() => logout()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Log out of your account">
-              <Text style={{ color: colors.brand.primary, fontWeight: '600' }}>Logout</Text>
+              <Text style={{ color: colors.brand.primary, fontWeight: '600', marginRight: 16 }}>Logout</Text>
             </Pressable>
           ),
         }}

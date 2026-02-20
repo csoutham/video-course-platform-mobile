@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
@@ -131,6 +131,18 @@ export function PlayerScreen() {
 
     return preferredPlayer === 'webview';
   }, [playback?.stream?.player]);
+
+  useEffect(() => {
+    if (!preferredStreamUrl || isIframeStream) {
+      return;
+    }
+
+    try {
+      player.play();
+    } catch {
+      // no-op; playback can still be started manually if autoplay is blocked
+    }
+  }, [isIframeStream, player, preferredStreamUrl]);
 
   const openResource = async (resourceId: number): Promise<void> => {
     const response = await apiClient.request<ResourceResponse>(`/api/v1/mobile/resources/${resourceId}`);
@@ -391,7 +403,18 @@ export function PlayerScreen() {
 
   const playerContent = (
     <>
-      {isLessonLoading && !playback ? <SkeletonRows rows={3} height={80} /> : null}
+      {isLessonLoading && !playback ? (
+        <View style={styles.playerSkeletonWrap}>
+          <View style={styles.playerSkeletonVideo} />
+          <View style={styles.playerSkeletonControls}>
+            <View style={styles.playerSkeletonButton} />
+            <View style={styles.playerSkeletonButton} />
+            <View style={styles.playerSkeletonButton} />
+          </View>
+          <View style={styles.playerSkeletonLineLong} />
+          <View style={styles.playerSkeletonLineShort} />
+        </View>
+      ) : null}
       {!isLessonLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => refreshAll(true)} /> : null}
       {!isLessonLoading && !errorMessage && !playback ? (
         <EmptyState title="Lesson unavailable" message="We could not load playback details for this lesson." />
@@ -664,6 +687,41 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 16 / 9,
     backgroundColor: colors.dark.videoBackground,
+  },
+  playerSkeletonWrap: {
+    gap: spacing.sm + 2,
+  },
+  playerSkeletonVideo: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: radius.lg,
+    backgroundColor: colors.dark.panelMuted,
+    borderWidth: 1,
+    borderColor: colors.dark.borderStrong,
+  },
+  playerSkeletonControls: {
+    flexDirection: 'row',
+    gap: spacing.sm + 2,
+  },
+  playerSkeletonButton: {
+    flex: 1,
+    height: 42,
+    borderRadius: radius.md,
+    backgroundColor: colors.dark.panel,
+    borderWidth: 1,
+    borderColor: colors.dark.border,
+  },
+  playerSkeletonLineLong: {
+    height: 14,
+    width: '72%',
+    borderRadius: radius.pill,
+    backgroundColor: colors.dark.panelMuted,
+  },
+  playerSkeletonLineShort: {
+    height: 12,
+    width: '44%',
+    borderRadius: radius.pill,
+    backgroundColor: colors.dark.panelMuted,
   },
   sectionTitle: {
     color: colors.dark.text,

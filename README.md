@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.20`
+Version: `0.1.21`
 
 ## Build Target Model
 
@@ -53,7 +53,7 @@ bun run android
 - Course lesson list
 - Lesson playback + heartbeat progress updates
 - Resource download handoff through signed URLs
-- Account (receipts + logout-all devices) / logout from header
+- Account (receipts) / logout from header
 - Orientation: phones portrait-only, tablets portrait + landscape
 
 ## Security Notes
