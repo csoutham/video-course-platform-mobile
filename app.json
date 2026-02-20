@@ -2,10 +2,13 @@
   "expo": {
     "name": "Video Courses Mobile",
     "slug": "videocourses-mobile",
-    "version": "0.1.25",
+    "version": "0.1.26",
+    "icon": "./assets/branding/icon.png",
     "orientation": "default",
     "userInterfaceStyle": "light",
+    "favicon": "./assets/branding/favicon.png",
     "splash": {
+      "image": "./assets/branding/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
     },
@@ -17,7 +20,11 @@
       }
     },
     "android": {
-      "package": "com.videocourses.mobile"
+      "package": "com.videocourses.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      }
     },
     "extra": {
       "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}"
