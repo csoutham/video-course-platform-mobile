@@ -48,7 +48,7 @@ function TabsNavigator() {
         component={AccountScreen}
         options={{
           headerRight: () => (
-            <Pressable onPress={() => logout()} hitSlop={8}>
+            <Pressable onPress={() => logout()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Log out of your account">
               <Text style={{ color: colors.brand.primary, fontWeight: '600' }}>Logout</Text>
             </Pressable>
           ),

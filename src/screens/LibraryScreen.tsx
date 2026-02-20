@@ -126,6 +126,9 @@ export function LibraryScreen() {
             style={gridColumns > 1 ? styles.cardGrid : undefined}
             onPress={() => openCourse(item.slug, item.title)}
             disabled={openingCourseSlug === item.slug}
+            accessibilityRole="button"
+            accessibilityLabel={`Open course: ${item.title}`}
+            accessibilityHint="Opens lessons and playback for this course."
           >
             <Card>
               <View style={styles.thumbnailWrap}>

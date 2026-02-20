@@ -84,6 +84,9 @@ export function CourseScreen() {
                     title: lesson.title,
                   })
                 }
+                accessibilityRole="button"
+                accessibilityLabel={`Open lesson: ${lesson.title}`}
+                accessibilityHint="Opens the lesson player."
               >
                 <Card>
                   <View style={styles.row}>

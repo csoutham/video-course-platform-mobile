@@ -96,6 +96,9 @@ export function AccountScreen() {
             onPress={() => {
               Linking.openURL(item.receipt_url);
             }}
+            accessibilityRole="link"
+            accessibilityLabel={`Open receipt for order ${item.order_public_id}`}
+            accessibilityHint="Opens Stripe receipt in your browser."
           >
             <Card>
               <View style={styles.receiptCardBody}>

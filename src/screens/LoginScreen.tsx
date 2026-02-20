@@ -38,20 +38,26 @@ export function LoginScreen() {
               <TextInput
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoComplete="email"
+                textContentType="emailAddress"
                 placeholder="Email"
                 placeholderTextColor={colors.text.subtle}
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
+                accessibilityLabel="Email address"
               />
 
               <TextInput
                 placeholder="Password"
                 secureTextEntry
+                autoComplete="password"
+                textContentType="password"
                 placeholderTextColor={colors.text.subtle}
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
+                accessibilityLabel="Password"
               />
 
               <AppButton title={isSubmitting ? 'Signing in...' : 'Sign in'} onPress={onLogin} disabled={isSubmitting} />

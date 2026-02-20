@@ -322,6 +322,8 @@ export function PlayerScreen() {
           style={[styles.controlButton, !previousLesson ? styles.controlButtonDisabled : undefined]}
           onPress={() => previousLesson && openLesson(previousLesson.slug, previousLesson.title)}
           disabled={!previousLesson}
+          accessibilityRole="button"
+          accessibilityLabel="Previous lesson"
         >
           <Text style={styles.controlButtonText}>Previous</Text>
         </Pressable>
@@ -334,6 +336,8 @@ export function PlayerScreen() {
           ]}
           onPress={markLessonComplete}
           disabled={isLessonCompleted || isCompleting}
+          accessibilityRole="button"
+          accessibilityLabel={isLessonCompleted ? 'Lesson completed' : 'Mark lesson as complete'}
         >
           <Text style={styles.controlButtonText}>
             {isCompleting ? 'Saving...' : isLessonCompleted ? 'Completed' : 'Complete'}
@@ -348,6 +352,8 @@ export function PlayerScreen() {
           ]}
           onPress={() => nextLesson && openLesson(nextLesson.slug, nextLesson.title)}
           disabled={!nextLesson}
+          accessibilityRole="button"
+          accessibilityLabel="Next lesson"
         >
           <Text style={styles.controlButtonPrimaryText}>Next</Text>
         </Pressable>
@@ -366,7 +372,14 @@ export function PlayerScreen() {
         <>
           <Text style={styles.sectionTitle}>Resources</Text>
           {playback?.lesson.resources.map((resource) => (
-            <Pressable key={resource.id} style={styles.resource} onPress={() => openResource(resource.id)}>
+            <Pressable
+              key={resource.id}
+              style={styles.resource}
+              onPress={() => openResource(resource.id)}
+              accessibilityRole="link"
+              accessibilityLabel={`Open resource: ${resource.name}`}
+              accessibilityHint="Opens this resource file in your browser."
+            >
               <Text style={styles.resourceTitle}>{resource.name}</Text>
               <Text style={styles.meta}>{resource.mime_type || 'file'}</Text>
             </Pressable>
@@ -394,6 +407,9 @@ export function PlayerScreen() {
                         key={lesson.id}
                         style={[styles.lessonItem, isActive ? styles.lessonItemActive : undefined]}
                         onPress={() => openLesson(lesson.slug, lesson.title)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open lesson: ${lesson.title}`}
+                        accessibilityHint="Loads this lesson in the player."
                       >
                         <View style={styles.lessonItemRow}>
                           <View style={styles.lessonItemBody}>
