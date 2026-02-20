@@ -17,6 +17,18 @@ type CacheOptions = {
 const CACHE_PREFIX = 'videocourses_mobile_api_cache:';
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly details?: Record<string, string[]>,
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+
 export class ApiClient {
   private isHandlingUnauthorized = false;
 
@@ -63,7 +75,12 @@ export class ApiClient {
       }
 
       const apiError = json as ApiError | null;
-      throw new Error(apiError?.error?.message || 'Request failed');
+      throw new ApiRequestError(
+        apiError?.error?.message || 'Request failed',
+        response.status,
+        apiError?.error?.code,
+        apiError?.error?.details,
+      );
     }
 
     return json as T;

@@ -8,6 +8,19 @@ Define phased hardening for the standalone mobile app:
 
 and its API dependency in this backend repo.
 
+## Implementation Status
+
+- Completed in mobile app:
+  - API base URL validation on startup with fail-fast screen.
+  - Centralized `401` session reset.
+  - Account-level `logout all devices` control.
+  - Progress write guardrails and explicit handling for `422/429` rejections.
+  - Short-lived playback URL caching without stale fallback reuse.
+  - Production-only SSL public-key pinning support (env-gated).
+- Backend coordination still required for full completion:
+  - Authoritative server-side progress jump validation + anomaly logging.
+  - Signed URL TTL policy + entitlement revalidation hardening.
+
 ## Threat-Focused Priorities
 
 1. Stolen token reuse.

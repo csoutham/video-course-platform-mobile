@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.15`
+Version: `0.1.16`
 
 ## Build Target Model
 
@@ -25,6 +25,9 @@ Create `.env`:
 
 ```dotenv
 EXPO_PUBLIC_API_BASE_URL=https://your-installation.example.com
+EXPO_PUBLIC_SSL_PINNING_ENABLED=false
+EXPO_PUBLIC_SSL_PINNING_HOST=your-installation.example.com
+EXPO_PUBLIC_SSL_PINNING_PUBLIC_KEYS=base64sha256pin1,base64sha256pin2
 ```
 
 ## Run
@@ -42,7 +45,7 @@ bun run android
 - Course lesson list
 - Lesson playback + heartbeat progress updates
 - Resource download handoff through signed URLs
-- Account (find courses + receipts) / logout from header
+- Account (receipts + logout-all devices) / logout from header
 - Orientation: phones portrait-only, tablets portrait + landscape
 
 ## Security Notes
@@ -50,6 +53,9 @@ bun run android
 - Tokens are stored with `expo-secure-store`.
 - Entitlement checks are enforced server-side.
 - Resource file URLs are short-lived and signed.
+- Playback URL cache is short-lived and does not fall back to stale signed URLs.
+- Progress writes are guarded client-side and API rejections are surfaced cleanly.
+- Optional production SSL public-key pinning is available via env configuration.
 
 ## QA Checklist
 

@@ -6,6 +6,7 @@ import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
 
+import { ApiRequestError } from '../api/client';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { SkeletonRows } from '../components/ui/SkeletonRows';
@@ -16,6 +17,8 @@ import { colors, radius, spacing, type } from '../theme/tokens';
 import type { CourseDetailResponse, PlaybackResponse, ResourceResponse } from '../types/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
+const PROGRESS_MAX_DURATION_SECONDS = 12 * 60 * 60;
+const PROGRESS_MIN_WRITE_INTERVAL_MS = 3000;
 
 export function PlayerScreen() {
   const { apiClient } = useAuth();
@@ -31,6 +34,8 @@ export function PlayerScreen() {
   const [isCompleting, setIsCompleting] = useState(false);
   const [switchingToLessonSlug, setSwitchingToLessonSlug] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [progressWarning, setProgressWarning] = useState<string | null>(null);
+  const lastProgressWriteRef = useRef<{ at: number; position: number } | null>(null);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
   const playbackPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`;
   const progressPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`;
@@ -49,7 +54,8 @@ export function PlayerScreen() {
         setErrorMessage(null);
         const response = await apiClient.requestWithCache<PlaybackResponse>(playbackPath, {
           forceRefresh,
-          ttlMs: 60 * 1000,
+          ttlMs: 20 * 1000,
+          fallbackToStaleOnError: false,
         });
         latestPlaybackRef.current = response;
         setPlayback(response);
@@ -160,6 +166,29 @@ export function PlayerScreen() {
   const isLessonCompleted =
     playback?.progress.status === 'completed' || (playback?.progress.percent_complete ?? 0) >= 99;
 
+  const handleProgressSubmissionError = useCallback((error: unknown, context: 'heartbeat' | 'complete') => {
+    if (error instanceof ApiRequestError && (error.status === 422 || error.status === 429)) {
+      setProgressWarning(
+        context === 'complete'
+          ? 'Completion could not be saved right now. Please try again.'
+          : 'Progress sync is temporarily limited. We will retry automatically.',
+      );
+      console.warn('Progress update rejected by API', {
+        status: error.status,
+        code: error.code,
+        details: error.details,
+      });
+      return;
+    }
+
+    if (error instanceof Error) {
+      setProgressWarning(error.message);
+      return;
+    }
+
+    setProgressWarning('Progress sync failed unexpectedly.');
+  }, []);
+
   const applyProgressUpdate = useCallback(
     async (response: { status: string; percent_complete: number; playback_position_seconds: number; updated_at: string | null }) => {
       let nextPlayback: PlaybackResponse | null = null;
@@ -221,6 +250,7 @@ export function PlayerScreen() {
       if (nextPlayback) {
         latestPlaybackRef.current = nextPlayback;
         await apiClient.setCachedResponse(playbackPath, nextPlayback);
+        setProgressWarning(null);
       }
 
       if (nextCourse) {
@@ -234,10 +264,28 @@ export function PlayerScreen() {
 
   const submitProgress = useCallback(
     async (isCompleted = false) => {
-      const position = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
-      const duration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
+      const now = Date.now();
+      const rawPosition = typeof player.currentTime === 'number' ? Math.max(0, Math.floor(player.currentTime)) : 0;
+      const rawDuration = typeof player.duration === 'number' && player.duration > 0 ? Math.floor(player.duration) : undefined;
 
-      return apiClient.request<{
+      if (!isCompleted && rawDuration && rawDuration > PROGRESS_MAX_DURATION_SECONDS) {
+        throw new Error('Video duration is out of range for progress updates.');
+      }
+
+      const position = rawDuration ? Math.min(rawPosition, rawDuration + 60) : rawPosition;
+      const duration = rawDuration;
+
+      const previousWrite = lastProgressWriteRef.current;
+      if (
+        !isCompleted &&
+        previousWrite &&
+        now - previousWrite.at < PROGRESS_MIN_WRITE_INTERVAL_MS &&
+        Math.abs(position - previousWrite.position) < 2
+      ) {
+        return null;
+      }
+
+      const response = await apiClient.request<{
         status: string;
         percent_complete: number;
         playback_position_seconds: number;
@@ -250,6 +298,13 @@ export function PlayerScreen() {
           is_completed: isCompleted,
         }),
       });
+
+      lastProgressWriteRef.current = {
+        at: now,
+        position,
+      };
+
+      return response;
     },
     [apiClient, player, progressPath],
   );
@@ -263,11 +318,15 @@ export function PlayerScreen() {
 
     try {
       const response = await submitProgress(true);
-      await applyProgressUpdate(response);
+      if (response) {
+        await applyProgressUpdate(response);
+      }
+    } catch (error) {
+      handleProgressSubmissionError(error, 'complete');
     } finally {
       setIsCompleting(false);
     }
-  }, [applyProgressUpdate, isLessonCompleted, playback, submitProgress]);
+  }, [applyProgressUpdate, handleProgressSubmissionError, isLessonCompleted, playback, submitProgress]);
 
   useFocusEffect(
     useCallback(() => {
@@ -285,6 +344,9 @@ export function PlayerScreen() {
 
         try {
           const response = await submitProgress();
+          if (!response) {
+            return;
+          }
 
           if (
             response.status !== current.progress.status ||
@@ -293,13 +355,13 @@ export function PlayerScreen() {
           ) {
             await applyProgressUpdate(response);
           }
-        } catch {
-          // no-op for heartbeat failures
+        } catch (error) {
+          handleProgressSubmissionError(error, 'heartbeat');
         }
       }, heartbeatSeconds * 1000);
 
       return () => clearInterval(interval);
-    }, [applyProgressUpdate, submitProgress]),
+    }, [applyProgressUpdate, handleProgressSubmissionError, submitProgress]),
   );
 
   useFocusEffect(
@@ -310,16 +372,21 @@ export function PlayerScreen() {
         }
 
         void submitProgress(true)
-          .then((response) => applyProgressUpdate(response))
-          .catch(() => {
-            // no-op for completion failures
+          .then((response) => {
+            if (response) {
+              return applyProgressUpdate(response);
+            }
+            return Promise.resolve();
+          })
+          .catch((error) => {
+            handleProgressSubmissionError(error, 'complete');
           });
       });
 
       return () => {
         subscription.remove();
       };
-    }, [applyProgressUpdate, player, submitProgress]),
+    }, [applyProgressUpdate, handleProgressSubmissionError, player, submitProgress]),
   );
 
   const playerContent = (
@@ -387,6 +454,7 @@ export function PlayerScreen() {
           <Text style={styles.controlButtonPrimaryText}>Next</Text>
         </Pressable>
       </View>
+      {progressWarning ? <Text style={styles.warningText}>{progressWarning}</Text> : null}
 
       {hasSummary ? (
         <>
@@ -657,5 +725,9 @@ const styles = StyleSheet.create({
   controlButtonPrimaryText: {
     color: colors.dark.text,
     fontWeight: '700',
+  },
+  warningText: {
+    color: colors.dark.accentSoft,
+    fontSize: type.body,
   },
 });

@@ -8,11 +8,16 @@ import { getMobileEnvError } from './config/env';
 import { AuthProvider } from './context/AuthContext';
 import { AppNavigator } from './navigation/AppNavigator';
 import { ConfigErrorScreen } from './screens/ConfigErrorScreen';
+import { initializeSslPinningForProduction } from './security/sslPinning';
 
 export default function App() {
   const configError = getMobileEnvError();
 
   useEffect(() => {
+    void initializeSslPinningForProduction().catch((error) => {
+      console.warn('SSL pinning initialization skipped', error);
+    });
+
     const lockOrientation = async (): Promise<void> => {
       const deviceType = await Device.getDeviceTypeAsync();
       const isTablet = deviceType === Device.DeviceType.TABLET;

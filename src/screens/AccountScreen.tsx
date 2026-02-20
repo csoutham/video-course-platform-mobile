@@ -1,7 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppButton } from '../components/ui/AppButton';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -37,10 +38,11 @@ function formatDate(value: string | null): string {
 }
 
 export function AccountScreen() {
-  const { user, apiClient } = useAuth();
+  const { user, apiClient, logoutAllDevices } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadReceipts = useCallback(
@@ -73,9 +75,43 @@ export function AccountScreen() {
     }, [loadReceipts]),
   );
 
+  const onLogoutAllDevices = useCallback(() => {
+    Alert.alert('Log out all devices', 'This will sign you out from every active mobile session for this account.', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Log out all',
+        style: 'destructive',
+        onPress: () => {
+          setIsRevokingAll(true);
+          void logoutAllDevices()
+            .then(() => {
+              Alert.alert('Done', 'All active sessions have been revoked.');
+            })
+            .catch((error) => {
+              Alert.alert('Unable to revoke sessions', error instanceof Error ? error.message : 'Unknown error');
+            })
+            .finally(() => {
+              setIsRevokingAll(false);
+            });
+        },
+      },
+    ]);
+  }, [logoutAllDevices]);
+
   return (
     <ScreenContainer>
       <SectionHeading title={user?.name || 'Account'} subtitle={user?.email || ''} />
+      <View style={styles.actions}>
+        <AppButton
+          title={isRevokingAll ? 'Revoking...' : 'Log out all devices'}
+          onPress={onLogoutAllDevices}
+          disabled={isRevokingAll}
+          variant="secondary"
+        />
+      </View>
       <Text style={styles.sectionTitle}>Receipts</Text>
 
       {isLoading ? <SkeletonRows rows={3} /> : null}
@@ -118,8 +154,14 @@ export function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: {
+  actions: {
     marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+    alignSelf: 'flex-start',
+    minWidth: 220,
+  },
+  sectionTitle: {
+    marginTop: spacing.xs + 2,
     fontSize: type.heading,
     fontWeight: '700',
     color: colors.text.primary,

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { ApiClient } from '../api/client';
+import { ApiClient, ApiRequestError } from '../api/client';
 import { clearToken, readToken, writeToken } from '../auth/tokenStore';
 import type { LoginResponse, MobileUser } from '../types/api';
 
@@ -11,6 +11,7 @@ type AuthContextValue = {
     isBootstrapping: boolean;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    logoutAllDevices: () => Promise<void>;
     apiClient: ApiClient;
 };
 
@@ -80,6 +81,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clearSession();
     };
 
+    const logoutAllDevices = async (): Promise<void> => {
+        const candidates = ['/api/v1/mobile/auth/logout-all', '/api/v1/mobile/auth/logout_all'];
+        let missingCount = 0;
+
+        for (const endpoint of candidates) {
+            try {
+                await apiClient.request(endpoint, {
+                    method: 'POST',
+                });
+                await clearSession();
+                return;
+            } catch (error) {
+                if (error instanceof ApiRequestError && error.status === 404) {
+                    missingCount += 1;
+                    continue;
+                }
+
+                throw error;
+            }
+        }
+
+        if (missingCount === candidates.length) {
+            throw new Error('Logout-all is not enabled on this installation yet.');
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -88,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isBootstrapping,
                 login,
                 logout,
+                logoutAllDevices,
                 apiClient,
             }}>
             {children}

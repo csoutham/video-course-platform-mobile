@@ -8,8 +8,8 @@ Provide issue-ready backlog entries for execution in:
 
 ## Current Status
 
-- Completed: `MBL-01`, `MBL-02`, `MBL-03`, `MBL-04`, `MBL-05`, `MBL-10`
-- Remaining: `MBL-06`, `MBL-07`, `MBL-08`, `MBL-09`
+- Completed: `MBL-01`, `MBL-02`, `MBL-03`, `MBL-04`, `MBL-05`, `MBL-06`, `MBL-07`, `MBL-08`, `MBL-09`, `MBL-10`
+- Remaining: none
 
 ## Backlog Items
 
