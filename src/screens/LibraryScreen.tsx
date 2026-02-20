@@ -166,7 +166,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cardGrid: {
-    flex: 1,
+    width: '50%',
+    maxWidth: '50%',
+    paddingRight: spacing.xs,
   },
   thumbnailWrap: {
     position: 'relative',
