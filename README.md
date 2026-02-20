@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.18`
+Version: `0.1.19`
 
 ## Build Target Model
 
@@ -37,6 +37,10 @@ bun run start
 bun run ios
 bun run android
 ```
+
+## Distribution
+
+- See `/docs/32-expo-distribution-guide.md` for iOS/TestFlight and Android distribution workflows with EAS.
 
 ## Scope (v1)
 
