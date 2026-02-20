@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import type { ExpoConfig } from 'expo/config';
 
 import appJson from './app.json';

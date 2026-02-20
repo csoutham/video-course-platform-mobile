@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.23`
+Version: `0.1.24`
 
 ## Build Target Model
 
@@ -33,6 +33,8 @@ EXPO_UPDATES_URL=https://u.expo.dev/00000000-0000-0000-0000-000000000000
 ```
 
 `EXPO_PROJECT_ID` and `EXPO_UPDATES_URL` are intentionally env-driven for open-source safety.
+`app.config.ts` loads local `.env` automatically for local CLI commands.
+For EAS cloud builds, configure the same variables in EAS environment settings.
 
 ## Run
 
