@@ -2,7 +2,7 @@
   "expo": {
     "name": "Video Courses Mobile",
     "slug": "videocourses-mobile",
-    "version": "0.1.19",
+    "version": "0.1.20",
     "orientation": "default",
     "userInterfaceStyle": "light",
     "splash": {
@@ -11,7 +11,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.videocourses.mobile"
+      "bundleIdentifier": "com.videocourses.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.videocourses.mobile"
@@ -19,6 +22,9 @@
     "extra": {
       "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}"
     },
-    "plugins": ["expo-secure-store", "expo-video"]
+    "plugins": [
+      "expo-secure-store",
+      "expo-video"
+    ]
   }
 }

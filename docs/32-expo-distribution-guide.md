@@ -43,9 +43,17 @@ EXPO_PUBLIC_API_BASE_URL=https://your-installation.example.com
 EXPO_PUBLIC_SSL_PINNING_ENABLED=false
 EXPO_PUBLIC_SSL_PINNING_HOST=your-installation.example.com
 EXPO_PUBLIC_SSL_PINNING_PUBLIC_KEYS=base64sha256pin1,base64sha256pin2
+EXPO_PROJECT_ID=00000000-0000-0000-0000-000000000000
+EXPO_UPDATES_URL=https://u.expo.dev/00000000-0000-0000-0000-000000000000
 ```
 
 Set these in local `.env` and in EAS secrets/env configuration before cloud builds.
+
+Note:
+
+1. `EXPO_PROJECT_ID` maps to `expo.extra.eas.projectId` via `app.config.ts`.
+2. `EXPO_UPDATES_URL` maps to `expo.updates.url` via `app.config.ts`.
+3. These are not hardcoded in source to keep the repo open-source safe.
 
 ## iOS Distribution (Available Now)
 

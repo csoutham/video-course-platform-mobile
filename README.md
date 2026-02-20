@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.19`
+Version: `0.1.20`
 
 ## Build Target Model
 
@@ -21,14 +21,18 @@ cd mobile
 bun install
 ```
 
-Create `.env`:
+Create `.env` (copy from `.env.example`):
 
 ```dotenv
 EXPO_PUBLIC_API_BASE_URL=https://your-installation.example.com
 EXPO_PUBLIC_SSL_PINNING_ENABLED=false
 EXPO_PUBLIC_SSL_PINNING_HOST=your-installation.example.com
 EXPO_PUBLIC_SSL_PINNING_PUBLIC_KEYS=base64sha256pin1,base64sha256pin2
+EXPO_PROJECT_ID=00000000-0000-0000-0000-000000000000
+EXPO_UPDATES_URL=https://u.expo.dev/00000000-0000-0000-0000-000000000000
 ```
+
+`EXPO_PROJECT_ID` and `EXPO_UPDATES_URL` are intentionally env-driven for open-source safety.
 
 ## Run
 
