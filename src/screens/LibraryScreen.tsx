@@ -24,8 +24,9 @@ export function LibraryScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [openingCourseSlug, setOpeningCourseSlug] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isTablet = width >= 768;
   const isTabletLandscape = width >= 1024 && width > height;
-  const gridColumns = isTabletLandscape ? 2 : 1;
+  const gridColumns = isTabletLandscape || (isTablet && courses.length === 1) ? 2 : 1;
 
   const loadLibrary = useCallback(
     async (forceRefresh = false) => {
