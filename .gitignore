@@ -6,3 +6,4 @@ web-build/
 coverage/
 .DS_Store
 *.log
+.idea/
