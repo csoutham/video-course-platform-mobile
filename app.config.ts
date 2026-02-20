@@ -10,19 +10,17 @@ function readOptionalEnv(name: string): string | undefined {
 }
 
 export default (): ExpoConfig => {
-  const projectId = readOptionalEnv('EXPO_PROJECT_ID');
+  const projectId = readOptionalEnv('EXPO_PROJECT_ID') ?? readOptionalEnv('EAS_PROJECT_ID');
   const updatesUrl = readOptionalEnv('EXPO_UPDATES_URL') ?? (projectId ? `https://u.expo.dev/${projectId}` : undefined);
 
   const extra: NonNullable<ExpoConfig['extra']> = {
     ...(staticConfig.extra ?? {}),
   };
 
-  if (projectId) {
-    extra.eas = {
-      ...(extra.eas ?? {}),
-      projectId,
-    };
-  }
+  extra.eas = {
+    ...(extra.eas ?? {}),
+    ...(projectId ? { projectId } : {}),
+  };
 
   const config: ExpoConfig = {
     ...staticConfig,

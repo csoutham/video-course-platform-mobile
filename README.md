@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.21`
+Version: `0.1.22`
 
 ## Build Target Model
 
