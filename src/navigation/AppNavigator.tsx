@@ -11,6 +11,7 @@ import { CourseScreen } from '../screens/CourseScreen';
 import { LibraryScreen } from '../screens/LibraryScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PlayerScreen } from '../screens/PlayerScreen';
+import { colors } from '../theme/tokens';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AppTabs = createBottomTabNavigator<AppTabParamList>();
@@ -21,11 +22,11 @@ function TabsNavigator() {
   return (
     <AppTabs.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: '#1d4ed8',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: colors.brand.primary,
+        tabBarInactiveTintColor: colors.text.subtle,
         tabBarStyle: {
-          borderTopColor: '#e2e8f0',
-          backgroundColor: '#ffffff',
+          borderTopColor: colors.surface.muted,
+          backgroundColor: colors.surface.card,
         },
         tabBarIcon: ({ color, size }) => {
           const iconName = route.name === 'Library' ? 'library-outline' : 'person-circle-outline';
@@ -48,7 +49,7 @@ function TabsNavigator() {
         options={{
           headerRight: () => (
             <Pressable onPress={() => logout()} hitSlop={8}>
-              <Text style={{ color: '#1d4ed8', fontWeight: '600' }}>Logout</Text>
+              <Text style={{ color: colors.brand.primary, fontWeight: '600' }}>Logout</Text>
             </Pressable>
           ),
         }}
@@ -100,11 +101,11 @@ export function AppNavigator() {
                 headerBackButtonDisplayMode: 'minimal',
                 headerBackTitle: 'Courses',
                 headerStyle: {
-                  backgroundColor: '#020617',
+                  backgroundColor: colors.dark.background,
                 },
-                headerTintColor: '#f8fafc',
+                headerTintColor: colors.dark.text,
                 headerTitleStyle: {
-                  color: '#f8fafc',
+                  color: colors.dark.text,
                 },
               })}
             />

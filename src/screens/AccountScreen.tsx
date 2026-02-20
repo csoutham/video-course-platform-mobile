@@ -2,7 +2,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Card } from '../components/ui/Card';
+import { ScreenContainer } from '../components/ui/ScreenContainer';
+import { SectionHeading } from '../components/ui/SectionHeading';
 import { useAuth } from '../context/AuthContext';
+import { colors, spacing, type } from '../theme/tokens';
 import type { Receipt, ReceiptsResponse } from '../types/api';
 
 function formatAmount(amount: number, currency: string): string {
@@ -63,10 +67,8 @@ export function AccountScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{user?.name}</Text>
-      <Text style={styles.meta}>{user?.email}</Text>
-
+    <ScreenContainer>
+      <SectionHeading title={user?.name || 'Account'} subtitle={user?.email || ''} />
       <Text style={styles.sectionTitle}>Receipts</Text>
 
       {isLoading ? <Text style={styles.meta}>Loading receipts...</Text> : null}
@@ -83,59 +85,48 @@ export function AccountScreen() {
         onRefresh={() => loadReceipts(true)}
         renderItem={({ item }) => (
           <Pressable
-            style={styles.receiptCard}
             onPress={() => {
               Linking.openURL(item.receipt_url);
             }}
           >
-            <Text style={styles.receiptTitle}>Order {item.order_public_id}</Text>
-            <Text style={styles.meta}>
-              {formatAmount(item.total_amount, item.currency)} · {item.status}
-            </Text>
-            <Text style={styles.meta}>Paid: {formatDate(item.paid_at)}</Text>
-            {item.refunded_at ? <Text style={styles.meta}>Refunded: {formatDate(item.refunded_at)}</Text> : null}
+            <Card>
+              <View style={styles.receiptCardBody}>
+                <Text style={styles.receiptTitle}>Order {item.order_public_id}</Text>
+                <Text style={styles.meta}>
+                  {formatAmount(item.total_amount, item.currency)} · {item.status}
+                </Text>
+                <Text style={styles.meta}>Paid: {formatDate(item.paid_at)}</Text>
+                {item.refunded_at ? <Text style={styles.meta}>Refunded: {formatDate(item.refunded_at)}</Text> : null}
+              </View>
+            </Card>
           </Pressable>
         )}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    gap: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
   sectionTitle: {
-    marginTop: 8,
-    fontSize: 18,
+    marginTop: spacing.xs,
+    fontSize: type.heading,
     fontWeight: '700',
-    color: '#0f172a',
+    color: colors.text.primary,
   },
   meta: {
-    color: '#475569',
+    color: colors.text.secondary,
+    fontSize: type.body,
   },
   list: {
-    gap: 10,
-    paddingBottom: 24,
+    gap: spacing.sm + 2,
+    paddingBottom: spacing.xl,
   },
-  receiptCard: {
-    borderRadius: 10,
-    borderColor: '#cbd5e1',
-    borderWidth: 1,
-    backgroundColor: '#fff',
-    padding: 12,
-    gap: 4,
+  receiptCardBody: {
+    padding: spacing.md,
+    gap: spacing.xs,
   },
   receiptTitle: {
-    color: '#0f172a',
+    color: colors.text.primary,
     fontWeight: '700',
   },
 });

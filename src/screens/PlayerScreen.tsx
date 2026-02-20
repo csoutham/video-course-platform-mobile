@@ -9,6 +9,7 @@ import { WebView } from 'react-native-webview';
 import { useAuth } from '../context/AuthContext';
 import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
+import { colors, radius, spacing, type } from '../theme/tokens';
 import type { CourseDetailResponse, PlaybackResponse, ResourceResponse } from '../types/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
@@ -390,7 +391,7 @@ export function PlayerScreen() {
                               {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
                             </Text>
                           </View>
-                          <Ionicons name="chevron-forward" size={16} color={isActive ? '#bfdbfe' : '#94a3b8'} />
+                          <Ionicons name="chevron-forward" size={16} color={isActive ? colors.dark.accentSoft : colors.dark.textMuted} />
                         </View>
                       </Pressable>
                     );
@@ -432,12 +433,12 @@ export function PlayerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020617',
+    backgroundColor: colors.dark.background,
   },
   content: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
   },
   splitLayout: {
     flex: 1,
@@ -446,143 +447,143 @@ const styles = StyleSheet.create({
   lessonsColumn: {
     width: 360,
     borderRightWidth: 1,
-    borderRightColor: '#1e293b',
-    padding: 12,
-    gap: 8,
+    borderRightColor: colors.dark.borderStrong,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   playerColumn: {
     flex: 1,
   },
   playerContent: {
-    padding: 12,
-    gap: 12,
+    padding: spacing.md,
+    gap: spacing.md,
   },
   lessonListContent: {
-    gap: 10,
-    paddingBottom: 20,
+    gap: spacing.sm + 2,
+    paddingBottom: spacing.lg + 4,
   },
   moduleGroup: {
-    gap: 8,
+    gap: spacing.sm,
   },
   moduleTitle: {
-    color: '#cbd5e1',
+    color: colors.dark.textSecondary,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: type.bodyLarge,
   },
   lessonItem: {
     borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 10,
-    padding: 10,
+    borderColor: colors.dark.border,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
     gap: 4,
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.dark.panel,
   },
   lessonItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: spacing.sm,
   },
   lessonItemBody: {
     flex: 1,
     gap: 4,
   },
   lessonItemActive: {
-    borderColor: '#60a5fa',
-    backgroundColor: '#172554',
+    borderColor: colors.dark.accent,
+    backgroundColor: colors.brand.primaryMuted,
   },
   lessonItemTitle: {
-    color: '#e2e8f0',
+    color: colors.dark.textSecondary,
     fontWeight: '600',
   },
   lessonItemTitleActive: {
-    color: '#bfdbfe',
+    color: colors.dark.accentSoft,
   },
   lessonItemMeta: {
-    color: '#94a3b8',
-    fontSize: 12,
+    color: colors.dark.textMuted,
+    fontSize: type.label,
   },
   title: {
-    color: '#f8fafc',
+    color: colors.dark.text,
     fontSize: 20,
     fontWeight: '700',
   },
   meta: {
-    color: '#94a3b8',
+    color: colors.dark.textMuted,
   },
   videoWrap: {
     width: '100%',
     maxWidth: '100%',
     alignSelf: 'center',
-    borderRadius: 12,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    borderColor: '#1e293b',
+    borderColor: colors.dark.borderStrong,
     borderWidth: 1,
   },
   video: {
     width: '100%',
     aspectRatio: 16 / 9,
-    backgroundColor: '#000',
+    backgroundColor: colors.dark.videoBackground,
   },
   sectionTitle: {
-    color: '#f8fafc',
+    color: colors.dark.text,
     fontWeight: '600',
-    fontSize: 16,
-    marginTop: 8,
+    fontSize: type.subheading,
+    marginTop: spacing.sm,
   },
   resource: {
-    borderRadius: 10,
-    borderColor: '#334155',
+    borderRadius: radius.md,
+    borderColor: colors.dark.border,
     borderWidth: 1,
-    padding: 12,
+    padding: spacing.md,
   },
   resourceTitle: {
-    color: '#e2e8f0',
+    color: colors.dark.textSecondary,
     fontWeight: '600',
   },
   summaryWrap: {
-    borderRadius: 10,
-    borderColor: '#334155',
+    borderRadius: radius.md,
+    borderColor: colors.dark.border,
     borderWidth: 1,
-    padding: 12,
-    backgroundColor: '#0f172a',
+    padding: spacing.md,
+    backgroundColor: colors.dark.panel,
   },
   summaryText: {
-    color: '#e2e8f0',
+    color: colors.dark.textSecondary,
     lineHeight: 20,
   },
   controlsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: spacing.sm + 2,
   },
   controlButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderColor: colors.dark.border,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.dark.panel,
   },
   controlButtonPrimary: {
-    borderColor: '#1e3a8a',
-    backgroundColor: '#1e3a8a',
+    borderColor: colors.brand.primaryMuted,
+    backgroundColor: colors.brand.primaryMuted,
   },
   controlButtonComplete: {
-    borderColor: '#334155',
-    backgroundColor: '#1e293b',
+    borderColor: colors.dark.border,
+    backgroundColor: colors.dark.panelMuted,
   },
   controlButtonDisabled: {
     opacity: 0.45,
   },
   controlButtonText: {
-    color: '#e2e8f0',
+    color: colors.dark.textSecondary,
     fontWeight: '600',
   },
   controlButtonPrimaryText: {
-    color: '#f8fafc',
+    color: colors.dark.text,
     fontWeight: '700',
   },
 });

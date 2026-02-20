@@ -4,9 +4,13 @@ import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-n
 import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Card } from '../components/ui/Card';
+import { ScreenContainer } from '../components/ui/ScreenContainer';
+import { SectionHeading } from '../components/ui/SectionHeading';
 import { useAuth } from '../context/AuthContext';
 import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
+import { colors, spacing, type } from '../theme/tokens';
 import type { CourseDetailResponse } from '../types/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Course'>;
@@ -48,9 +52,8 @@ export function CourseScreen() {
   const lessonCount = course?.modules.reduce((count, module) => count + module.lessons.length, 0) ?? 0;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>{course?.title || route.params.title}</Text>
-      <Text style={styles.meta}>{isLoading ? 'Loading...' : `${moduleCount} modules · ${lessonCount} lessons`}</Text>
+    <ScreenContainer>
+      <SectionHeading title={course?.title || route.params.title} subtitle={isLoading ? 'Loading...' : `${moduleCount} modules · ${lessonCount} lessons`} />
 
       <ScrollView
         contentContainerStyle={styles.list}
@@ -63,7 +66,6 @@ export function CourseScreen() {
             {module.lessons.map((lesson) => (
               <Pressable
                 key={lesson.id}
-                style={styles.card}
                 onPress={() =>
                   navigation.navigate('Player', {
                     courseSlug: route.params.courseSlug,
@@ -72,75 +74,60 @@ export function CourseScreen() {
                   })
                 }
               >
-                <View style={styles.row}>
-                  <View style={styles.rowContent}>
-                    <Text style={styles.title}>{lesson.title}</Text>
-                    <Text style={styles.meta}>
-                      {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
-                    </Text>
+                <Card>
+                  <View style={styles.row}>
+                    <View style={styles.rowContent}>
+                      <Text style={styles.title}>{lesson.title}</Text>
+                      <Text style={styles.meta}>
+                        {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.text.subtle} />
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
-                </View>
+                </Card>
               </Pressable>
             ))}
           </View>
         ))}
       </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-    padding: 16,
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 6,
-    color: '#0f172a',
-  },
   meta: {
-    fontSize: 13,
-    color: '#475569',
+    fontSize: type.body,
+    color: colors.text.secondary,
   },
   list: {
-    gap: 10,
-    paddingTop: 12,
-    paddingBottom: 20,
+    gap: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.lg + 4,
   },
   moduleBlock: {
-    gap: 8,
+    gap: spacing.sm,
   },
   moduleTitle: {
-    fontSize: 15,
+    fontSize: type.bodyLarge,
     fontWeight: '700',
-    color: '#1e293b',
+    color: colors.text.primary,
     marginTop: 4,
-  },
-  card: {
-    borderRadius: 10,
-    borderColor: '#cbd5e1',
-    borderWidth: 1,
-    backgroundColor: '#fff',
-    padding: 14,
-    gap: 5,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: spacing.sm + 2,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.md,
   },
   rowContent: {
     flex: 1,
-    gap: 5,
+    gap: spacing.xs + 1,
   },
   title: {
-    fontSize: 16,
+    fontSize: type.subheading,
     fontWeight: '600',
-    color: '#0f172a',
+    color: colors.text.primary,
   },
 });
