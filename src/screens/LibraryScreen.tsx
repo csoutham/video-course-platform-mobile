@@ -4,8 +4,11 @@ import { useCallback, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '../components/ui/Card';
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { SectionHeading } from '../components/ui/SectionHeading';
+import { SkeletonRows } from '../components/ui/SkeletonRows';
 import { useAuth } from '../context/AuthContext';
 import { formatProgressLabel } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
@@ -20,6 +23,7 @@ export function LibraryScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [openingCourseSlug, setOpeningCourseSlug] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isTabletLandscape = width >= 1024 && width > height;
   const gridColumns = isTabletLandscape ? 2 : 1;
 
@@ -32,10 +36,13 @@ export function LibraryScreen() {
       }
 
       try {
+        setErrorMessage(null);
         const response = await apiClient.requestWithCache<LibraryResponse>('/api/v1/mobile/library', {
           forceRefresh,
         });
         setCourses(response.courses);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load courses right now.');
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -97,11 +104,15 @@ export function LibraryScreen() {
     <ScreenContainer>
       <SectionHeading title="My Courses" subtitle="Continue where you left off." />
 
-      {isLoading ? <Text style={styles.meta}>Loading...</Text> : null}
+      {isLoading ? <SkeletonRows rows={3} height={120} /> : null}
 
-      {!isLoading && courses.length === 0 ? <Text style={styles.meta}>No entitled courses found for this account.</Text> : null}
+      {!isLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => loadLibrary(true)} /> : null}
 
-      <FlatList
+      {!isLoading && !errorMessage && courses.length === 0 ? (
+        <EmptyState title="No courses yet" message="No entitled courses found for this account." />
+      ) : null}
+
+      {!isLoading && !errorMessage ? <FlatList
         data={courses}
         keyExtractor={(item) => String(item.id)}
         key={gridColumns}
@@ -137,7 +148,7 @@ export function LibraryScreen() {
             </Card>
           </Pressable>
         )}
-      />
+      /> : null}
     </ScreenContainer>
   );
 }

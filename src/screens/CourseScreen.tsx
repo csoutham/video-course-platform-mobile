@@ -5,8 +5,11 @@ import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '../components/ui/Card';
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { SectionHeading } from '../components/ui/SectionHeading';
+import { SkeletonRows } from '../components/ui/SkeletonRows';
 import { useAuth } from '../context/AuthContext';
 import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
@@ -22,6 +25,7 @@ export function CourseScreen() {
   const [course, setCourse] = useState<CourseDetailResponse['course'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadCourse = useCallback(async (forceRefresh = false) => {
     if (forceRefresh) {
@@ -31,11 +35,14 @@ export function CourseScreen() {
     }
 
     try {
+      setErrorMessage(null);
       const response = await apiClient.requestWithCache<CourseDetailResponse>(
         `/api/v1/mobile/courses/${route.params.courseSlug}`,
         { forceRefresh },
       );
       setCourse(response.course);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to load this course right now.');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -55,7 +62,11 @@ export function CourseScreen() {
     <ScreenContainer>
       <SectionHeading title={course?.title || route.params.title} subtitle={isLoading ? 'Loading...' : `${moduleCount} modules · ${lessonCount} lessons`} />
 
-      <ScrollView
+      {isLoading ? <SkeletonRows rows={5} /> : null}
+      {!isLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => loadCourse(true)} /> : null}
+      {!isLoading && !errorMessage && !course ? <EmptyState title="No lessons found" message="This course does not have published lessons yet." /> : null}
+
+      {!isLoading && !errorMessage && course ? <ScrollView
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadCourse(true)} />}
       >
@@ -89,7 +100,7 @@ export function CourseScreen() {
             ))}
           </View>
         ))}
-      </ScrollView>
+      </ScrollView> : null}
     </ScreenContainer>
   );
 }

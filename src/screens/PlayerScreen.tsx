@@ -6,6 +6,9 @@ import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { WebView } from 'react-native-webview';
 
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
+import { SkeletonRows } from '../components/ui/SkeletonRows';
 import { useAuth } from '../context/AuthContext';
 import { formatLessonProgress } from '../lib/progress';
 import type { RootStackParamList } from '../navigation/types';
@@ -25,6 +28,7 @@ export function PlayerScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
   const playbackPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`;
   const progressPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/progress`;
@@ -63,7 +67,10 @@ export function PlayerScreen() {
       }
 
       try {
+        setErrorMessage(null);
         await Promise.all([loadPlayback(forceRefresh), loadCourseDetail(forceRefresh)]);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load this lesson right now.');
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -288,6 +295,12 @@ export function PlayerScreen() {
 
   const playerContent = (
     <>
+      {isLoading ? <SkeletonRows rows={3} height={80} /> : null}
+      {!isLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => refreshAll(true)} /> : null}
+      {!isLoading && !errorMessage && !playback ? (
+        <EmptyState title="Lesson unavailable" message="We could not load playback details for this lesson." />
+      ) : null}
+
       {!isLoading && (preferredStreamUrl || iframeStreamUrl) ? (
         <View style={styles.videoWrap}>
           {isIframeStream && iframeStreamUrl ? (
@@ -407,7 +420,6 @@ export function PlayerScreen() {
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => refreshAll(true)} />}
           >
             <Text style={styles.title}>{route.params.title}</Text>
-            {isLoading ? <Text style={styles.meta}>Loading lesson...</Text> : null}
             {playerContent}
           </ScrollView>
         </View>
@@ -422,9 +434,6 @@ export function PlayerScreen() {
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => refreshAll(true)} />}
     >
       <Text style={styles.title}>{route.params.title}</Text>
-
-      {isLoading ? <Text style={styles.meta}>Loading lesson...</Text> : null}
-
       {playerContent}
     </ScrollView>
   );

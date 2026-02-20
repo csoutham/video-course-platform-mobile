@@ -3,8 +3,11 @@ import { useCallback, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '../components/ui/Card';
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { SectionHeading } from '../components/ui/SectionHeading';
+import { SkeletonRows } from '../components/ui/SkeletonRows';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, type } from '../theme/tokens';
 import type { Receipt, ReceiptsResponse } from '../types/api';
@@ -38,6 +41,7 @@ export function AccountScreen() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadReceipts = useCallback(
     async (forceRefresh = false) => {
@@ -48,10 +52,13 @@ export function AccountScreen() {
       }
 
       try {
+        setErrorMessage(null);
         const response = await apiClient.requestWithCache<ReceiptsResponse>('/api/v1/mobile/receipts', {
           forceRefresh,
         });
         setReceipts(response.receipts);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load receipts right now.');
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -71,13 +78,14 @@ export function AccountScreen() {
       <SectionHeading title={user?.name || 'Account'} subtitle={user?.email || ''} />
       <Text style={styles.sectionTitle}>Receipts</Text>
 
-      {isLoading ? <Text style={styles.meta}>Loading receipts...</Text> : null}
+      {isLoading ? <SkeletonRows rows={3} /> : null}
+      {!isLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => loadReceipts(true)} /> : null}
 
-      {!isLoading && receipts.length === 0 ? (
-        <Text style={styles.meta}>No receipts available for this account.</Text>
+      {!isLoading && !errorMessage && receipts.length === 0 ? (
+        <EmptyState title="No receipts yet" message="No receipts are available for this account." />
       ) : null}
 
-      <FlatList
+      {!isLoading && !errorMessage ? <FlatList
         data={receipts}
         keyExtractor={(item) => item.order_public_id}
         contentContainerStyle={styles.list}
@@ -101,7 +109,7 @@ export function AccountScreen() {
             </Card>
           </Pressable>
         )}
-      />
+      /> : null}
     </ScreenContainer>
   );
 }
