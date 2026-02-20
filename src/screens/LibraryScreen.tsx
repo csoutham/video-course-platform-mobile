@@ -1,7 +1,8 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useState } from 'react';
-import { FlatList, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -32,7 +33,7 @@ export function LibraryScreen() {
     async (forceRefresh = false) => {
       if (forceRefresh) {
         setIsRefreshing(true);
-      } else {
+      } else if (courses.length === 0) {
         setIsLoading(true);
       }
 
@@ -49,7 +50,7 @@ export function LibraryScreen() {
         setIsRefreshing(false);
       }
     },
-    [apiClient],
+    [apiClient, courses.length],
   );
 
   useFocusEffect(
@@ -57,6 +58,18 @@ export function LibraryScreen() {
       loadLibrary();
     }, [loadLibrary]),
   );
+
+  useEffect(() => {
+    const thumbnailUrls = courses
+      .map((course) => course.thumbnail_url)
+      .filter((url): url is string => Boolean(url));
+
+    if (thumbnailUrls.length === 0) {
+      return;
+    }
+
+    void Image.prefetch(thumbnailUrls, 'memory-disk');
+  }, [courses]);
 
   const openCourse = useCallback(
     async (courseSlug: string, courseTitle: string) => {
@@ -134,7 +147,7 @@ export function LibraryScreen() {
             <Card>
               <View style={styles.thumbnailWrap}>
                 {item.thumbnail_url ? (
-                  <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} resizeMode="cover" />
+                  <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} contentFit="cover" cachePolicy="memory-disk" transition={140} />
                 ) : (
                   <View style={styles.thumbnailPlaceholder}>
                     <Text style={styles.thumbnailPlaceholderText}>No Thumbnail</Text>
