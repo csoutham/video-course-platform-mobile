@@ -25,9 +25,11 @@ export function PlayerScreen() {
 
   const [playback, setPlayback] = useState<PlaybackResponse | null>(null);
   const [courseDetail, setCourseDetail] = useState<CourseDetailResponse['course'] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCourseLoading, setIsCourseLoading] = useState(true);
+  const [isLessonLoading, setIsLessonLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [switchingToLessonSlug, setSwitchingToLessonSlug] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const latestPlaybackRef = useRef<PlaybackResponse | null>(null);
   const playbackPath = `/api/v1/mobile/courses/${route.params.courseSlug}/lessons/${route.params.lessonSlug}/playback`;
@@ -38,41 +40,60 @@ export function PlayerScreen() {
   const isTabletLandscape = width >= 1024 && width > height;
 
   const loadPlayback = useCallback(
-    async (forceRefresh = false) => {
-      const response = await apiClient.requestWithCache<PlaybackResponse>(playbackPath, { forceRefresh, ttlMs: 60 * 1000 });
+    async (forceRefresh = false, showLoading = false) => {
+      if (showLoading) {
+        setIsLessonLoading(true);
+      }
 
-      latestPlaybackRef.current = response;
-      setPlayback(response);
+      try {
+        setErrorMessage(null);
+        const response = await apiClient.requestWithCache<PlaybackResponse>(playbackPath, {
+          forceRefresh,
+          ttlMs: 60 * 1000,
+        });
+        latestPlaybackRef.current = response;
+        setPlayback(response);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load this lesson right now.');
+      } finally {
+        if (showLoading) {
+          setIsLessonLoading(false);
+          setSwitchingToLessonSlug(null);
+        }
+      }
     },
     [apiClient, playbackPath],
   );
 
   const loadCourseDetail = useCallback(
-    async (forceRefresh = false) => {
-      const response = await apiClient.requestWithCache<CourseDetailResponse>(courseDetailPath, {
-        forceRefresh,
-      });
+    async (forceRefresh = false, showLoading = false) => {
+      if (showLoading) {
+        setIsCourseLoading(true);
+      }
 
-      setCourseDetail(response.course);
+      try {
+        const response = await apiClient.requestWithCache<CourseDetailResponse>(courseDetailPath, {
+          forceRefresh,
+        });
+        setCourseDetail(response.course);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load this course right now.');
+      } finally {
+        if (showLoading) {
+          setIsCourseLoading(false);
+        }
+      }
     },
     [apiClient, courseDetailPath],
   );
 
   const refreshAll = useCallback(
     async (forceRefresh = false) => {
-      if (forceRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
+      setIsRefreshing(true);
 
       try {
-        setErrorMessage(null);
-        await Promise.all([loadPlayback(forceRefresh), loadCourseDetail(forceRefresh)]);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Unable to load this lesson right now.');
+        await Promise.all([loadPlayback(forceRefresh, false), loadCourseDetail(forceRefresh, false)]);
       } finally {
-        setIsLoading(false);
         setIsRefreshing(false);
       }
     },
@@ -81,8 +102,15 @@ export function PlayerScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      refreshAll(true);
-    }, [refreshAll]),
+      void loadCourseDetail(true, true);
+    }, [loadCourseDetail]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      setPlayback(null);
+      void loadPlayback(true, true);
+    }, [loadPlayback]),
   );
 
   const preferredStreamUrl = playback?.stream?.preferred_url || playback?.stream_url || null;
@@ -108,6 +136,7 @@ export function PlayerScreen() {
       return;
     }
 
+    setSwitchingToLessonSlug(lessonSlug);
     navigation.setParams({
       lessonSlug,
       title,
@@ -295,13 +324,13 @@ export function PlayerScreen() {
 
   const playerContent = (
     <>
-      {isLoading ? <SkeletonRows rows={3} height={80} /> : null}
-      {!isLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => refreshAll(true)} /> : null}
-      {!isLoading && !errorMessage && !playback ? (
+      {isLessonLoading && !playback ? <SkeletonRows rows={3} height={80} /> : null}
+      {!isLessonLoading && errorMessage ? <ErrorState message={errorMessage} onRetry={() => refreshAll(true)} /> : null}
+      {!isLessonLoading && !errorMessage && !playback ? (
         <EmptyState title="Lesson unavailable" message="We could not load playback details for this lesson." />
       ) : null}
 
-      {!isLoading && (preferredStreamUrl || iframeStreamUrl) ? (
+      {!isLessonLoading && (preferredStreamUrl || iframeStreamUrl) ? (
         <View style={styles.videoWrap}>
           {isIframeStream && iframeStreamUrl ? (
             <WebView source={{ uri: iframeStreamUrl }} style={styles.video} />
@@ -395,39 +424,52 @@ export function PlayerScreen() {
         <View style={styles.splitLayout}>
           <View style={styles.lessonsColumn}>
             <Text style={styles.title}>{courseDetail?.title || route.params.courseSlug}</Text>
-            <ScrollView contentContainerStyle={styles.lessonListContent}>
-              {lessonList.map((module) => (
-                <View key={module.id} style={styles.moduleGroup}>
-                  <Text style={styles.moduleTitle}>{module.title}</Text>
-                  {module.lessons.map((lesson) => {
-                    const isActive = lesson.slug === route.params.lessonSlug;
+            {isCourseLoading && !courseDetail ? <SkeletonRows rows={6} /> : null}
+            {!isCourseLoading ? (
+              <ScrollView contentContainerStyle={styles.lessonListContent}>
+                {lessonList.map((module) => (
+                  <View key={module.id} style={styles.moduleGroup}>
+                    <Text style={styles.moduleTitle}>{module.title}</Text>
+                    {module.lessons.map((lesson) => {
+                      const isActive = lesson.slug === route.params.lessonSlug;
+                      const isPending = switchingToLessonSlug === lesson.slug && !isActive;
 
-                    return (
-                      <Pressable
-                        key={lesson.id}
-                        style={[styles.lessonItem, isActive ? styles.lessonItemActive : undefined]}
-                        onPress={() => openLesson(lesson.slug, lesson.title)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Open lesson: ${lesson.title}`}
-                        accessibilityHint="Loads this lesson in the player."
-                      >
-                        <View style={styles.lessonItemRow}>
-                          <View style={styles.lessonItemBody}>
-                            <Text style={[styles.lessonItemTitle, isActive ? styles.lessonItemTitleActive : undefined]}>
-                              {lesson.title}
-                            </Text>
-                            <Text style={styles.lessonItemMeta}>
-                              {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
-                            </Text>
+                      return (
+                        <Pressable
+                          key={lesson.id}
+                          style={[
+                            styles.lessonItem,
+                            isActive ? styles.lessonItemActive : undefined,
+                            isPending ? styles.lessonItemPending : undefined,
+                          ]}
+                          onPress={() => openLesson(lesson.slug, lesson.title)}
+                          disabled={Boolean(switchingToLessonSlug)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Open lesson: ${lesson.title}`}
+                          accessibilityHint="Loads this lesson in the player."
+                        >
+                          <View style={styles.lessonItemRow}>
+                            <View style={styles.lessonItemBody}>
+                              <Text style={[styles.lessonItemTitle, isActive ? styles.lessonItemTitleActive : undefined]}>
+                                {lesson.title}
+                              </Text>
+                              <Text style={styles.lessonItemMeta}>
+                                {formatLessonProgress(lesson.progress?.status, lesson.progress?.percent_complete)}
+                              </Text>
+                            </View>
+                            <Ionicons
+                              name="chevron-forward"
+                              size={16}
+                              color={isActive ? colors.dark.accentSoft : colors.dark.textMuted}
+                            />
                           </View>
-                          <Ionicons name="chevron-forward" size={16} color={isActive ? colors.dark.accentSoft : colors.dark.textMuted} />
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ))}
-            </ScrollView>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ))}
+              </ScrollView>
+            ) : null}
           </View>
 
           <ScrollView
@@ -436,6 +478,7 @@ export function PlayerScreen() {
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => refreshAll(true)} />}
           >
             <Text style={styles.title}>{route.params.title}</Text>
+            {isLessonLoading && playback ? <Text style={styles.meta}>Loading lesson...</Text> : null}
             {playerContent}
           </ScrollView>
         </View>
@@ -450,6 +493,7 @@ export function PlayerScreen() {
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => refreshAll(true)} />}
     >
       <Text style={styles.title}>{route.params.title}</Text>
+      {isLessonLoading && playback ? <Text style={styles.meta}>Loading lesson...</Text> : null}
       {playerContent}
     </ScrollView>
   );
@@ -516,6 +560,9 @@ const styles = StyleSheet.create({
   lessonItemActive: {
     borderColor: colors.dark.accent,
     backgroundColor: colors.brand.primaryMuted,
+  },
+  lessonItemPending: {
+    opacity: 0.65,
   },
   lessonItemTitle: {
     color: colors.dark.textSecondary,

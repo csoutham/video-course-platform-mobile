@@ -6,6 +6,11 @@ Provide issue-ready backlog entries for execution in:
 
 - `git@github.com:csoutham/video-course-platform-mobile.git`
 
+## Current Status
+
+- Completed: `MBL-01`, `MBL-02`, `MBL-03`, `MBL-04`, `MBL-05`, `MBL-10`
+- Remaining: `MBL-06`, `MBL-07`, `MBL-08`, `MBL-09`
+
 ## Backlog Items
 
 ### MBL-01
