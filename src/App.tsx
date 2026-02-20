@@ -4,10 +4,14 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { getMobileEnvError } from './config/env';
 import { AuthProvider } from './context/AuthContext';
 import { AppNavigator } from './navigation/AppNavigator';
+import { ConfigErrorScreen } from './screens/ConfigErrorScreen';
 
 export default function App() {
+  const configError = getMobileEnvError();
+
   useEffect(() => {
     const lockOrientation = async (): Promise<void> => {
       const deviceType = await Device.getDeviceTypeAsync();
@@ -28,10 +32,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="auto" />
-        <AppNavigator />
-      </AuthProvider>
+      {configError ? (
+        <>
+          <StatusBar style="dark" />
+          <ConfigErrorScreen message={configError} />
+        </>
+      ) : (
+        <AuthProvider>
+          <StatusBar style="auto" />
+          <AppNavigator />
+        </AuthProvider>
+      )}
     </SafeAreaProvider>
   );
 }

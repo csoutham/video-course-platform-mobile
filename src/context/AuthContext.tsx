@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { ApiClient } from '../api/client';
 import { clearToken, readToken, writeToken } from '../auth/tokenStore';
@@ -21,7 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<MobileUser | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(true);
 
-    const apiClient = useMemo(() => new ApiClient(async () => token), [token]);
+    const clearSession = useCallback(async () => {
+        await clearToken();
+        setToken(null);
+        setUser(null);
+    }, []);
+
+    const apiClient = useMemo(() => new ApiClient(async () => token, clearSession), [clearSession, token]);
 
     useEffect(() => {
         (async () => {
@@ -35,19 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(storedToken);
 
             try {
-                const response = await new ApiClient(async () => storedToken).request<{ user: MobileUser }>(
+                const response = await new ApiClient(async () => storedToken, clearSession).request<{ user: MobileUser }>(
                     '/api/v1/mobile/me',
                 );
                 setUser(response.user);
             } catch {
-                await clearToken();
-                setToken(null);
-                setUser(null);
+                await clearSession();
             } finally {
                 setIsBootstrapping(false);
             }
         })();
-    }, []);
+    }, [clearSession]);
 
     const login = async (email: string, password: string): Promise<void> => {
         const payload = await apiClient.request<LoginResponse>('/api/v1/mobile/auth/login', {
@@ -73,9 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // no-op on logout failure
         }
 
-        await clearToken();
-        setToken(null);
-        setUser(null);
+        await clearSession();
     };
 
     return (

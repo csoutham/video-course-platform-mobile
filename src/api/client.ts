@@ -18,7 +18,12 @@ const CACHE_PREFIX = 'videocourses_mobile_api_cache:';
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
 export class ApiClient {
-  constructor(private readonly getToken: () => Promise<string | null>) {}
+  private isHandlingUnauthorized = false;
+
+  constructor(
+    private readonly getToken: () => Promise<string | null>,
+    private readonly onUnauthorized?: () => Promise<void>,
+  ) {}
 
   async request<T>(path: string, init?: RequestInit): Promise<T> {
     assertMobileEnv();
@@ -44,6 +49,19 @@ export class ApiClient {
     const json = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (response.status === 401) {
+        if (this.onUnauthorized && !this.isHandlingUnauthorized) {
+          this.isHandlingUnauthorized = true;
+          try {
+            await this.onUnauthorized();
+          } finally {
+            this.isHandlingUnauthorized = false;
+          }
+        }
+
+        throw new Error('Session expired. Please sign in again.');
+      }
+
       const apiError = json as ApiError | null;
       throw new Error(apiError?.error?.message || 'Request failed');
     }
