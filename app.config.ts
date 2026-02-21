@@ -27,10 +27,10 @@ export default (): ExpoConfig => {
   const config: ExpoConfig = {
     ...staticConfig,
     extra,
+    runtimeVersion: staticConfig.runtimeVersion ?? { policy: 'appVersion' },
   };
 
   if (updatesUrl) {
-    config.runtimeVersion = config.runtimeVersion ?? { policy: 'appVersion' };
     config.updates = {
       ...(config.updates ?? {}),
       url: updatesUrl,

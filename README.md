@@ -2,7 +2,7 @@
 
 React Native + Expo mobile app for playback of purchased Video Courses content.
 
-Version: `0.1.26`
+Version: `0.1.27`
 
 ## Build Target Model
 
@@ -67,6 +67,11 @@ bun run android
 - Playback URL cache is short-lived and does not fall back to stale signed URLs.
 - Progress writes are guarded client-side and API rejections are surfaced cleanly.
 - Optional production SSL public-key pinning is available via env configuration.
+
+## Expo Updates Note
+
+- `expo-updates` powers OTA update compatibility and runtime versioning.
+- This app uses `runtimeVersion` policy `appVersion` via `app.config.ts` to keep local and EAS runtime calculation aligned.
 
 ## QA Checklist
 
